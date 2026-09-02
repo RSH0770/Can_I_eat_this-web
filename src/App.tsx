@@ -1,5 +1,16 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Home } from './features/home/Home.tsx';
+import { NotFound } from './features/notFound/NotFound.tsx';
+
 export default function App() {
   return (
-    <div className="text-3xl font-bold text-red-500">App</div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+
+        {/* 404 Not Found */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
