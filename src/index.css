@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+@theme {
+    --font-sans: 'BookMyungjo', serif;
+}
+body {
+    font-family: var(--font-sans);
+}
+
+@font-face {
+    font-family: 'BookkMyungjo';
+    src: url('./fonts/BookkMyungjo_Light.ttf') format('truetype');
+    font-weight: 300 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'BookkMyungjo';
+    src: url('./fonts/BookkMyungjo_Bold.ttf') format('truetype');
+    font-weight: 600 900;
+    font-display: swap;
+}
