@@ -41,6 +41,12 @@ Git-flow 기반으로 운영합니다.
 
 모든 작업은 `develop`에서 진행한 뒤, 안정적인 단위가 완성될 때마다 PR을 통해 `main`으로 병합합니다.
 
+
+## PR 제목 규칙
+
+- `feature -> develop` PR: 커밋 컨벤션 타입을 그대로 사용 (예: `feat: 로그인 화면 구현`)
+- `develop -> main` PR: `release` 접두사 사용, 이번 배포에 포함된 내용을 요약 (예: `release: PhoneFrame 레이아웃 컴포넌트 적용 배포`)
+
 ## 커밋 컨벤션
 
 [Conventional Commits](https://www.conventionalcommits.org/)를 따릅니다.
