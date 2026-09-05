@@ -1,22 +1,34 @@
 @import "tailwindcss";
 
 @theme {
-    --font-sans: 'BookMyungjo', serif;
+    --font-sans: 'BookkMyungjo', serif;
 }
 body {
     font-family: var(--font-sans);
 }
 
+/* 부크크 폰트 적용  */
 @font-face {
     font-family: 'BookkMyungjo';
-    src: url('./fonts/BookkMyungjo_Light.ttf') format('truetype');
+    src: url('/fonts/BookkMyungjo_Light.ttf') format('truetype');
     font-weight: 300 500;
     font-display: swap;
 }
 
 @font-face {
     font-family: 'BookkMyungjo';
-    src: url('./fonts/BookkMyungjo_Bold.ttf') format('truetype');
+    src: url('/fonts/BookkMyungjo_Bold.ttf') format('truetype');
     font-weight: 600 900;
     font-display: swap;
+}
+
+/* 배경 디자인 */
+.screen-bg {
+    background-color: #e9e7e2;
+    background-image:
+        radial-gradient(ellipse 60% 40% at 18% 12%, rgba(126, 128, 120, .13), transparent 70%),
+        radial-gradient(ellipse 50% 45% at 88% 42%, rgba(112,116,112,.11), transparent 72%),
+        radial-gradient(ellipse 70% 35% at 40% 88%, rgba(126,128,120,.1), transparent 70%),
+        repeating-linear-gradient(92deg, rgba(96,100,96,.05) 0 1px, transparent 1px 5px),
+        repeating-linear-gradient(2deg, rgba(96,100,96,.032) 0 1px, transparent 1px 9px);
 }
