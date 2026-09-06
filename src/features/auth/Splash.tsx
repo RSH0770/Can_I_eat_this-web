@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AppLogo from "../../assets/AppLogo.png";
 
 const SPLASH_DURATION_MS = 3400;
 const LEAVE_ANIMATION_MS = 320;
@@ -25,7 +26,11 @@ export function Splash() {
     <div
       className={`grid h-full place-items-center ${leaving ? "animate-splash-out" : ""}`}
     >
-      <div className="text-2xl font-bold animate-mark-in">먹어도 돼?</div>
+      <img
+        src={AppLogo}
+        alt="먹어도 돼?"
+        className="h-[168px] w-auto animate-mark-in"
+      />
     </div>
   );
 }
