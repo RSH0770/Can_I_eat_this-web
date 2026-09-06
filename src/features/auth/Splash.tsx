@@ -1,14 +1,31 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+const SPLASH_DURATION_MS = 3400;
+const LEAVE_ANIMATION_MS = 320;
 
 export function Splash() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [leaving, setLeaving] = useState(false);
 
-    useEffect(() => {
-        const timer = setTimeout(() => navigate('/login'), 2000)
-        return () => clearTimeout(timer);
-    }, [navigate]);
+  useEffect(() => {
+    const showTimer = setTimeout(() => setLeaving(true), SPLASH_DURATION_MS);
+    return () => clearTimeout(showTimer);
+  }, []);
 
-    return <div>스플래시</div>
+  useEffect(() => {
+    if (!leaving) return;
+    const leaveTimer = setTimeout(() => {
+      navigate("/login", { replace: true });
+    }, LEAVE_ANIMATION_MS);
+    return () => clearTimeout(leaveTimer);
+  }, [leaving, navigate]);
 
+  return (
+    <div
+      className={`grid h-full place-items-center ${leaving ? "animate-splash-out" : ""}`}
+    >
+      <div className="text-2xl font-bold animate-mark-in">먹어도 돼?</div>
+    </div>
+  );
 }
