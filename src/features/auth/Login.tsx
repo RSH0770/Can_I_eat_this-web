@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontSizeController } from "../../components/FontSizeController";
 import { useFontScale } from "../../context/FontScaleContext";
+import { SCREEN_ENTER } from "../../constants/animation";
 
 export function Login() {
   const navigate = useNavigate();
@@ -15,7 +16,9 @@ export function Login() {
   }
 
   return (
-    <div className="animate-fade-slide-up flex h-full flex-col pb-[34px] pl-[22px] pr-[22px] pt-[62px] text-ink">
+    <div
+      className={`${SCREEN_ENTER} flex h-full flex-col pb-[34px] pl-[22px] pr-[22px] pt-[62px] text-ink`}
+    >
       <div className="flex items-center justify-between gap-[12px]">
         {/* TODO: 실제 로고 에셋(워드마크 이미지)으로 교체 예정 */}
         <span className="text-[1.3rem] font-bold tracking-[-0.02em]">
