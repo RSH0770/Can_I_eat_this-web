@@ -4,12 +4,14 @@ import {
   type FontScaleContextValue,
 } from "./FontScaleContext";
 
-const SCALE_STEPS = [0.9, 1, 1.15, 1.3] as const;
+const SCALE_STEPS = [0.9, 1, 1.15, 1.32, 1.5] as const;
 const DEFAULT_STEP_INDEX = 1;
 const STORAGE_KEY = "fontScaleStepIndex";
 const BASE_FONT_SIZE_PX = 16;
 
 function getInitialStepIndex() {
+  if (typeof window === "undefined") return DEFAULT_STEP_INDEX;
+
   const saved = localStorage.getItem(STORAGE_KEY);
   const index = saved ? Number(saved) : DEFAULT_STEP_INDEX;
   return Number.isInteger(index) && index >= 0 && index < SCALE_STEPS.length
