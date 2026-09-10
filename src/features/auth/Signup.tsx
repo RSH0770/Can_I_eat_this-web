@@ -209,7 +209,7 @@ export function Signup() {
       </div>
 
       {/* 본문 - 단계별 내용, 스크롤 기능 */}
-      <div className="min-h-0 flex-1 overflow-auto px-[22px] pb-[8px] pt-[14px]">
+      <div className="no-scrollbar min-h-0 flex-1 overflow-auto px-[22px] pb-[8px] pt-[14px]">
         {/* 1단계 */}
         {step === "s1" && (
           <>
