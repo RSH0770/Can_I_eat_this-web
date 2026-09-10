@@ -100,3 +100,14 @@ body {
     transform: scale(1.04);
   }
 }
+
+/* 스크롤바 숨기기 옵션 */
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
