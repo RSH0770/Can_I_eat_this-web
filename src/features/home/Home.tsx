@@ -11,8 +11,6 @@ const USER_NAME = "홍길동";
 const ALLERGIES = ["새우", "고등어"];
 const REQUEST_COUNT = 2;
 
-// TODO: 지역 선택 로직을 붙이기 전까지는 강릉으로 고정
-const REGION_CODE = "gangneung";
 const REGION_FOOD_TITLE = "강릉 지역 음식";
 
 // TODO: 실제 지역 음식 데이터(FOODS)로 교체
@@ -36,7 +34,7 @@ export function Home() {
   }
 
   function handleGoFoodList() {
-    navigate(`/home/regions/${REGION_CODE}`);
+    navigate("/home/foods");
   }
 
   return (
