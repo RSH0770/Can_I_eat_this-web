@@ -25,6 +25,9 @@ export type RestItem = {
   foods: string[];
   flags: string[];
   menus: MenuItem[];
+  // TODO: 실제 공공데이터/제휴 데이터 연동 시 식당의 정확한 위경도로 교체할 것
+  lat: number;
+  lng: number;
 };
 
 export const FOODS: FoodItem[] = [
@@ -69,6 +72,8 @@ export const RESTS: RestItem[] = [
     dist: "도보 6분",
     foods: ["sundubu"],
     flags: ["알레르기 표기 있음", "저염 요청 가능", "입식 좌석", "경사로"],
+    lat: 37.7969,
+    lng: 128.9312,
     menus: [
       {
         name: "순두부 백반",
@@ -103,6 +108,8 @@ export const RESTS: RestItem[] = [
     dist: "1.2km",
     foods: ["mulhoe"],
     flags: ["알레르기 표기 있음", "입식 좌석"],
+    lat: 37.8048,
+    lng: 128.8974,
     menus: [
       {
         name: "물회",
@@ -131,6 +138,8 @@ export const RESTS: RestItem[] = [
     dist: "2.4km",
     foods: ["ongsimi"],
     flags: ["저염 요청 가능", "좌식 좌석"],
+    lat: 37.7517,
+    lng: 128.8963,
     menus: [
       {
         name: "감자 옹심이",
@@ -159,6 +168,8 @@ export const RESTS: RestItem[] = [
     dist: "4.8km",
     foods: [],
     flags: ["알레르기 표기 있음", "저염 요청 가능", "입식 좌석", "경사로"],
+    lat: 37.7286,
+    lng: 128.8462,
     menus: [
       {
         name: "산채 정식",
