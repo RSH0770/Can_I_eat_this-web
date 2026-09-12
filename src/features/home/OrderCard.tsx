@@ -22,6 +22,7 @@ export function OrderCard() {
   const [newRequest, setNewRequest] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [savedImage, setSavedImage] = useState<string | null>(null);
+  const [isComposing, setIsComposing] = useState(false);
 
   const logoImgRef = useRef<HTMLImageElement | null>(null);
   const saveTimerRef = useRef<number | undefined>(undefined);
@@ -369,14 +370,16 @@ export function OrderCard() {
           <input
             value={newRequest}
             onChange={(e) => setNewRequest(e.target.value)}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                handleAddRequest();
-              }
+              if (e.key !== "Enter") return;
+              if (isComposing || e.nativeEvent.isComposing) return;
+              e.preventDefault();
+              handleAddRequest();
             }}
             placeholder="직접 적어 넣기"
-            className="min-w-0 flex-1 border-0 bg-transparent py-[4px] text-[0.96875rem] text-ink outline-none placeholder:text-ink/40"
+            className="min-w-0 flex-1 border-0 bg-transparent py-[4px] text-[0.96875rem] text-ink placeholder:text-ink/40"
           />
           <button
             type="button"
