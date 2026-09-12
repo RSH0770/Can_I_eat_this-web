@@ -13,6 +13,7 @@ import { MapPage } from "./features/map/MapPage.tsx";
 import { Me } from "./features/profile/Me.tsx";
 import { NotFound } from "./features/notFound/NotFound.tsx";
 import { FontScaleProvider } from "./context/FontScaleProvider.tsx";
+import { OrderCard } from "./features/home/OrderCard.tsx";
 
 export default function App() {
   return (
@@ -24,6 +25,11 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/find-account" element={<FindAccount />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/order-card" element={<OrderCard />} />
+            <Route
+              path="/restaurants/:restaurantId/order-card"
+              element={<OrderCard />}
+            />
 
             <Route element={<MainLayout />}>
               <Route path="/home" element={<Home />} />

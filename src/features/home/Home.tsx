@@ -30,7 +30,7 @@ export function Home() {
 
   function handleOpenCard() {
     // TODO: 주문 요청 카드 진입
-    console.log("TODO: 주문 요청 카드 화면으로 이동");
+    navigate("/order-card");
   }
 
   function handleGoFoodList() {
