@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontSizeController } from "../../components/FontSizeController";
 import { useFontScale } from "../../context/FontScaleContext";
+import { useAuth } from "../../context/AuthContext";
+import { ApiError } from "../../lib/apiClient";
 import { SCREEN_ENTER } from "../../constants/animation";
 import {
   DISEASES,
@@ -27,6 +29,12 @@ function toggleInList(list: string[], value: string) {
   return list.includes(value)
     ? list.filter((v) => v !== value)
     : [...list, value];
+}
+
+function withCustom(list: string[], custom: string) {
+  const v = custom.trim();
+  if (!v || list.includes(v)) return list;
+  return [...list, v];
 }
 
 // 제목 아래 공통 구분선
@@ -103,9 +111,12 @@ function FormField({
 
 export function Signup() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
 
   const [step, setStep] = useState<StepId>("s1");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   // 1단계: 계정 만들기
   const [sid, setSid] = useState("");
@@ -150,9 +161,11 @@ export function Signup() {
     (step === "s2" && !(name.trim() && gender));
 
   // TODO: 질환 매핑에 없는 직접입력 질환/성분은 autoCaresFor가 인식하지 못함 - 추후 처리 예정
+  // - 목록에 없는 질환을 직접 입력한 경우 자동으로 같이 오는 주의 성분은 없음
   const autoCares = autoCaresFor(diseases);
 
   function handleBack() {
+    setSubmitError("");
     if (stepIndex <= 0) {
       navigate("/login");
       return;
@@ -160,33 +173,85 @@ export function Signup() {
     setStep(STEP_IDS[stepIndex - 1]);
   }
 
-  function handleNext() {
-    if (stepIndex === STEP_IDS.length - 1) {
-      // TODO: authService.signup({ sid, spw, name, gender, birth }) - 계정 정보는 서버로
-      // TODO: medicalProfileStore.save({ diseases, cares, blood, allergies, chewing, meds, medNote, showMeds }) - 의료 정보는 이 기기에만 저장
-      navigate("/home");
+  async function handleNext() {
+    if (submitting) return;
+
+    if (step === "s1" || step === "s2") {
+      setStep(STEP_IDS[stepIndex + 1]);
       return;
     }
-    const next = STEP_IDS[stepIndex + 1];
-    if (next === "s4") {
-      setCares((prev) => [
-        ...autoCares,
-        ...prev.filter((c) => !autoCares.includes(c as Care)),
-      ]);
+
+    if (step === "s3") {
+      const merged = withCustom(diseases, diseaseCustom);
+      setDiseases(merged);
+      setDiseaseCustom("");
+      const auto: string[] = autoCaresFor(merged);
+      setCares((prev) => [...auto, ...prev.filter((c) => !auto.includes(c))]);
+      setStep("s4");
+      return;
     }
-    setStep(next);
+    if (step === "s4") {
+      setCares((prev) => withCustom(prev, careCustom));
+      setCareCustom("");
+      setStep("s5");
+      return;
+    }
+
+    // step === "s5": 5단계(프로필 만들기) - 여기서 회원가입 API 호출함
+    const finalAllergies = withCustom(allergies, allergyCustom);
+    setAllergies(finalAllergies);
+    setAllergyCustom("");
+
+    const birthYear = Number(birth);
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      await signup({
+        loginId: sid.trim(),
+        password: spw,
+        name: name.trim(),
+        gender,
+        birthYear:
+          birth.trim() && Number.isFinite(birthYear) ? birthYear : undefined,
+        bloodType: blood || undefined,
+        diseases,
+        cares,
+        allergies: finalAllergies,
+        chewingDifficulty: chewing,
+        medications: meds,
+        medNote,
+        showMedsOnCard: showMeds,
+      });
+      navigate("/home");
+    } catch (e) {
+      setSubmitError(
+        e instanceof ApiError
+          ? e.message
+          : "회원가입에 실패했습니다. 다시 시도해 주세요.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const nextLabel = step === "s5" ? "프로필 만들기" : "다음";
+  const nextLabel =
+    step == "s5" ? (submitting ? "생성 중..." : "프로필 만들기") : "다음";
+  const nextDisabled = stepBlocked || submitting;
 
   return (
     <div className={`${SCREEN_ENTER} flex h-full flex-col text-ink`}>
       {/* 상단 - 뒤로가기 + 단계 표시 + 글자 크기 조정 버튼 + 진행률 바 */}
       <div className="flex-none px-[22px] pb-[10px] pt-[16px]">
+        {submitError && (
+          <p className="mb-[12px] text-[0.84375rem] text-[#a6301f]">
+            {submitError}
+          </p>
+        )}
         <div className="flex items-center gap-[10px]">
           <button
             type="button"
             onClick={handleBack}
+            disabled={nextDisabled}
             className="border-0 bg-transparent p-0 text-[0.9375rem] text-ink"
           >
             〈 뒤로
@@ -523,7 +588,7 @@ export function Signup() {
         <button
           type="button"
           onClick={handleNext}
-          disabled={stepBlocked}
+          disabled={nextDisabled}
           className={`min-h-[52px] w-full border-0 text-[1.125rem] font-bold ${
             stepBlocked
               ? "cursor-not-allowed bg-ink/25 text-cream/75"
