@@ -4,16 +4,34 @@ import { FontSizeController } from "../../components/FontSizeController";
 import { useFontScale } from "../../context/FontScaleContext";
 import { SCREEN_ENTER } from "../../constants/animation";
 import AppLogo from "../../assets/AppLogo.png";
+import { useAuth } from "../../context/AuthContext";
+import { ApiError } from "../../lib/apiClient";
 
 export function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
   const [loginId, setLoginId] = useState("");
   const [loginPw, setLoginPw] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleLogin() {
-    // TODO: authService.login({ loginId, loginPw }) 연동 (계정 정보는 서버로)
-    navigate("/home");
+  async function handleLogin() {
+    if (submitting) return;
+    setError("");
+    setSubmitting(true);
+    try {
+      await login(loginId, loginPw);
+      navigate("/home");
+    } catch (e) {
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : "로그인에 실패했습니다. 다시 시도해 주세요.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -55,6 +73,7 @@ export function Login() {
             value={loginId}
             onChange={(e) => setLoginId(e.target.value)}
             placeholder="아이디"
+            autoComplete="username"
             className="min-h-[44px] border-0 border-b-2 border-ink bg-transparent px-[2px] py-[4px] text-[1.0625rem] text-ink outline-none"
           />
         </div>
@@ -67,19 +86,28 @@ export function Login() {
             type="password"
             value={loginPw}
             onChange={(e) => setLoginPw(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.nativeEvent.isComposing)
+                handleLogin();
+            }}
             placeholder="비밀번호"
             className="min-h-[44px] border-0 border-b-2 border-ink bg-transparent px-[2px] py-[4px] text-[1.0625rem] text-ink outline-none"
           />
         </div>
       </div>
 
+      {error && (
+        <p className="mt-[12px] text-[0.84375rem] text-[#a6301f]">{error}</p>
+      )}
+
       {/* 로그인 버튼 */}
       <button
         type="button"
         onClick={handleLogin}
+        disabled={submitting}
         className="mt-[26px] min-h-[52px] border-0 bg-ink text-[1.125rem] font-bold text-[#e9e7e2]"
       >
-        로그인
+        {submitting ? "로그인 중..." : "로그인"}
       </button>
 
       {/* 아이디 / 비밀번호 찾기 */}
@@ -111,9 +139,6 @@ export function Login() {
       >
         회원가입
       </button>
-      <p className="mt-[14px] text-center text-xs">
-        입력하신 정보는 이 기기에만 남습니다.
-      </p>
     </div>
   );
 }

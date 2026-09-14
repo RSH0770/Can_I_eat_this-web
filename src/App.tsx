@@ -14,38 +14,47 @@ import { Me } from "./features/profile/Me.tsx";
 import { NotFound } from "./features/notFound/NotFound.tsx";
 import { FontScaleProvider } from "./context/FontScaleProvider.tsx";
 import { OrderCard } from "./features/home/OrderCard.tsx";
+import { AuthProvider } from "./context/AuthContext.tsx";
+import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
 
 export default function App() {
   return (
     <PhoneFrame>
       <FontScaleProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Splash />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/find-account" element={<FindAccount />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/order-card" element={<OrderCard />} />
-            <Route
-              path="/restaurants/:restaurantId/order-card"
-              element={<OrderCard />}
-            />
-
-            <Route element={<MainLayout />}>
-              <Route path="/home" element={<Home />} />
-              <Route path="/home/foods" element={<FoodList />} />
-              <Route path="/home/foods/:foodId" element={<FoodRestaurants />} />
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Splash />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/find-account" element={<FindAccount />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/order-card" element={<OrderCard />} />
               <Route
-                path="/restaurants/:restaurantId"
-                element={<RestaurantDetail />}
+                path="/restaurants/:restaurantId/order-card"
+                element={<OrderCard />}
               />
-              <Route path="/map" element={<MapPage />} />
-              <Route path="/me" element={<Me />} />
-            </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+              <Route element={<ProtectedRoute />}>
+                <Route element={<MainLayout />}>
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/home/foods" element={<FoodList />} />
+                  <Route
+                    path="/home/foods/:foodId"
+                    element={<FoodRestaurants />}
+                  />
+                  <Route
+                    path="/restaurants/:restaurantId"
+                    element={<RestaurantDetail />}
+                  />
+                  <Route path="/map" element={<MapPage />} />
+                  <Route path="/me" element={<Me />} />
+                </Route>
+              </Route>
+
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
       </FontScaleProvider>
     </PhoneFrame>
   );
