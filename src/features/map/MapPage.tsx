@@ -91,17 +91,13 @@ export function MapPage() {
   const hasPages = searchState.status === "ready" && pages > 1;
   const noResults = searchState.status === "ready" && totalCount === 0;
 
-  // seal이 없는(미태깅) 식당은 마커 색을 확정할 수 없어 지도에는 seal 있는 곳만 찍는다.
-  // 목록에는 그대로 노출하고 "?" 표시로 구분(SealOrUnknown).
-  const markerData: MapMarkerData[] = items
-    .filter((item) => item.seal)
-    .map((item) => ({
-      id: String(item.id),
-      lat: item.lat,
-      lng: item.lng,
-      kind: item.seal!.verdict.toLowerCase() as SealKind,
-    }));
-  const mapCenter = computeCenter(markerData);
+  const markerData: MapMarkerData[] = items.map((item) => ({
+    id: String(item.id),
+    lat: item.lat,
+    lng: item.lng,
+    kind: item.seal ? (item.seal.verdict.toLowerCase() as SealKind) : "unknown",
+  }));
+  const mapCenter = searchState.coords ?? computeCenter(markerData);
 
   return (
     <div
@@ -249,6 +245,7 @@ export function MapPage() {
         <KakaoRestaurantMap
           markers={markerData}
           center={mapCenter}
+          myLocation={searchState.coords}
           height={232 * scale}
           level={8}
           onMarkerClick={openRestaurant}
@@ -264,6 +261,7 @@ export function MapPage() {
           <KakaoRestaurantMap
             markers={markerData}
             center={mapCenter}
+            myLocation={searchState.coords}
             height="100%"
             level={7}
             big

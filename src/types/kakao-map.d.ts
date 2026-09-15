@@ -22,6 +22,11 @@ interface KakaoMap {
   getLevel(): number;
   relayout(): void;
   addControl(control: KakaoZoomControl, position: number): void;
+  setBounds(bounds: KakapLatLngBounds): void;
+}
+
+interface KakaoLatLngBounds {
+  extend(latlng: KakakoLatLng): void;
 }
 
 interface KakaoCustomOverlayOptions {
@@ -41,6 +46,7 @@ interface KakaoCustomOverlay {
 interface KakaoMapsNamespace {
   load(callback: () => void): void;
   LatLng: new (lat: number, lng: number) => KakaoLatLng;
+  LatLngBounds: new () => KakaoLatLngBounds;
   Map: new (container: HTMLElement, options: KakaoMapOptions) => KakaoMap;
   CustomOverlay: new (options: KakaoCustomOverlayOptions) => KakaoCustomOverlay;
   ZoomControl: new () => KakaoZoomControl;

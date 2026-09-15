@@ -14,19 +14,29 @@ export type MapMarkerData = {
   id: string;
   lat: number;
   lng: number;
-  kind: SealKind;
+  kind: SealKind | "unknown";
 };
 
 function createMarkerElement(
-  kind: SealKind,
+  kind: SealKind | "unknown",
   big: boolean,
   onClick: () => void,
 ) {
   const el = document.createElement("button");
   el.type = "button";
-  el.textContent = SEAL_INFO[kind].mark;
-  el.setAttribute("aria-label", SEAL_INFO[kind].label);
-  const tone = SEAL_TONE[kind];
+  const isUnknown = kind === "unknown";
+  el.textContent = isUnknown ? "?" : SEAL_INFO[kind].mark;
+  el.setAttribute(
+    "aria-label",
+    isUnknown ? "아직 판정되지 않았습니다" : SEAL_INFO[kind].label,
+  );
+  const tone = isUnknown
+    ? {
+        bg: "rgba(233,231,226,.9)",
+        fg: "rgba(26,24,21,.4)",
+        border: "rgba(26,24,21,.3)",
+      }
+    : SEAL_TONE[kind];
   const size = big ? "52px" : "40px";
   Object.assign(el.style, {
     width: size,
@@ -34,7 +44,7 @@ function createMarkerElement(
     display: "grid",
     placeItems: "center",
     borderRadius: "3px",
-    border: `2px solid ${tone.border}`,
+    border: `2px ${isUnknown ? "dashed" : "solid"} ${tone.border}`,
     background: tone.bg,
     color: tone.fg,
     fontWeight: "700",
@@ -52,12 +62,29 @@ function createMarkerElement(
   return el;
 }
 
+function createMyLocationElement(big: boolean) {
+  const el = document.createElement("div");
+  el.setAttribute("aria-label", "내 위치");
+  el.setAttribute("title", "내 위치");
+  const size = big ? "20px" : "16px";
+  Object.assign(el.style, {
+    width: size,
+    height: size,
+    borderRadius: "50%",
+    background: "#2f6fed",
+    border: "3px solid #fff",
+    boxShadow: "0 0 0 4px rgba(47,111,237,.28), 0 2px 6px rgba(26,24,21,.35)",
+  } as Partial<CSSStyleDeclaration> as Record<string, string>);
+  return el;
+}
+
 type KakaoRestaurantMapProps = {
   markers: MapMarkerData[];
   center: { lat: number; lng: number };
   height: number | string;
   level?: number;
   big?: boolean;
+  myLocation?: { lat: number; lng: number } | null;
   onMarkerClick: (id: string) => void;
   onMapClick?: () => void;
 };
@@ -68,6 +95,7 @@ export function KakaoRestaurantMap({
   height,
   level = 8,
   big = false,
+  myLocation = null,
   onMarkerClick,
   onMapClick,
 }: KakaoRestaurantMapProps) {
@@ -75,6 +103,7 @@ export function KakaoRestaurantMap({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<KakaoMap | null>(null);
   const overlaysRef = useRef<KakaoCustomOverlay[]>([]);
+  const myLocationOverlayRef = useRef<KakaoCustomOverlay | null>(null);
 
   // 지도 인스턴스는 SDK가 준비된 뒤 한 번만 생성한다. center/level의 이후 변경은 아래 별도 effect가 setCenter/setLevel로 반영하므로, 여기서는 최초 생성 시점의 값만 쓰고 status만 의존성으로 둠
   useEffect(() => {
@@ -97,11 +126,30 @@ export function KakaoRestaurantMap({
   // 이미 만들어진 지도 인스턴스에 중심/레벨 변경을 반영 (예: 검색/필터로 결과가 바뀌어 중심 좌표가 이동한 경우)
   useEffect(() => {
     if (!mapRef.current || status !== "ready") return;
-    mapRef.current.setCenter(
-      new window.kakao.maps.LatLng(center.lat, center.lng),
-    );
-    mapRef.current.setLevel(level);
-  }, [status, center.lat, center.lng, level]);
+    const kakao = window.kakao;
+    const map = mapRef.current;
+
+    if (myLocation && markers.length > 0) {
+      const bounds = new kakao.maps.LatLngBounds();
+      bounds.extend(new kakao.maps.LatLng(myLocation.lat, myLocation.lng));
+      markers.forEach((m) =>
+        bounds.extend(new kakao.maps.LatLng(m.lat, m.lng)),
+      );
+      map.setBounds(bounds);
+      return;
+    }
+
+    map.setCenter(new kakao.maps.LatLng(center.lat, center.lng));
+    map.setLevel(level);
+  }, [
+    status,
+    center.lat,
+    center.lng,
+    level,
+    myLocation?.lat,
+    myLocation?.lng,
+    markers,
+  ]);
 
   // 지도 "빈 공간" 탭 리스너 — 마커 클릭은 마커 엘리먼트 자체의 click에서 stopPropagation하므로 여기로 전파되지 않움
   useEffect(() => {
@@ -142,6 +190,33 @@ export function KakaoRestaurantMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- onMarkerClick은 렌더마다 새로 만들어지는 함수라 의도적으로 제외
   }, [status, markers, big]);
+
+  // "내 위치" 오버레이 — 식당 마커와 별도로 관리해서, 검색 결과가 바뀌어 마커 목록이
+  // 다시 그려질 때(위 effect) 내 위치 점까지 같이 깜빡이며 지워지지 않게 한다.
+  useEffect(() => {
+    if (status !== "ready" || !mapRef.current) return;
+    const kakao = window.kakao;
+    const map = mapRef.current;
+
+    myLocationOverlayRef.current?.setMap(null);
+    myLocationOverlayRef.current = null;
+
+    if (!myLocation) return;
+
+    const overlay = new kakao.maps.CustomOverlay({
+      position: new kakao.maps.LatLng(myLocation.lat, myLocation.lng),
+      content: createMyLocationElement(big),
+      xAnchor: 0.5,
+      yAnchor: 0.5,
+      zIndex: 5,
+    });
+    overlay.setMap(map);
+    myLocationOverlayRef.current = overlay;
+
+    return () => {
+      overlay.setMap(null);
+    };
+  }, [status, myLocation?.lat, myLocation?.lng, big]);
 
   return (
     <div style={{ position: "relative", width: "100%", height }}>

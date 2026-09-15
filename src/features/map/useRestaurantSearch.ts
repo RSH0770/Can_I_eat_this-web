@@ -25,6 +25,7 @@ const GEO_ERROR_MESSAGES: Record<number, string> = {
 export function useRestaurantSearch(query: string, page: number, size: number) {
   const { token } = useAuth();
   const [state, setState] = useState<SearchState>({ status: "locating" });
+  const [coords, setCoords] = useState<Coords | null>(null);
   const coordsRef = useRef<Coords | null>(null);
 
   const fetchRestaurants = useCallback(
@@ -69,6 +70,7 @@ export function useRestaurantSearch(query: string, page: number, size: number) {
       (pos) => {
         const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         coordsRef.current = coords;
+        setCoords(coords);
         fetchRestaurants(coords, query, page);
       },
       (err) => {
@@ -101,5 +103,5 @@ export function useRestaurantSearch(query: string, page: number, size: number) {
     if (coordsRef.current) fetchRestaurants(coordsRef.current, query, page);
   }, [fetchRestaurants, query, page]);
 
-  return { ...state, retryLocation: locate, retry };
+  return { ...state, coords, retryLocation: locate, retry };
 }
