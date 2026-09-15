@@ -13,7 +13,7 @@ import { MapPage } from "./features/map/MapPage.tsx";
 import { Me } from "./features/profile/Me.tsx";
 import { NotFound } from "./features/notFound/NotFound.tsx";
 import { FontScaleProvider } from "./context/FontScaleProvider.tsx";
-import { OrderCard } from "./features/home/OrderCard.tsx";
+import { OrderCard } from "./features/home/OrderCard/OrderCard.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
 
