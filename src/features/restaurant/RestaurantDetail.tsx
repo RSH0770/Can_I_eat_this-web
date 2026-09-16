@@ -132,7 +132,7 @@ export function RestaurantDetail() {
                 setRequests(merged);
                 navigate(`/restaurants/${restaurant.id}/order-card`, {
                   state: {
-                    cardMenu: `${restaurant.name} · ${m.name}`,
+                    restaurantId: restaurant.id,
                     requests: merged,
                   },
                 });
@@ -310,7 +310,7 @@ export function RestaurantDetail() {
                   type="button"
                   onClick={() =>
                     navigate(`/restaurants/${restaurant.id}/order-card`, {
-                      state: { cardMenu: restaurant.name, requests },
+                      state: { restaurantId: restaurant.id, requests },
                     })
                   }
                   className="cursor-pointer rounded-[3px] border-0 bg-ink p-[14px] text-[1.03125rem] font-bold text-cream"
