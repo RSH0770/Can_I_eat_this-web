@@ -6,6 +6,7 @@ import { DEFAULT_REQUESTS } from "../../../constants/requestOptions";
 import AppLogo from "../../../assets/AppLogo.png";
 import { useOrderCard, type OrderCardParams } from "./useOrderCard";
 import { useProfile } from "../../profile/useProfile";
+import type { CardResponse } from "./types";
 
 const CARD_FONT = '"BookkMyungjo", serif';
 
@@ -13,6 +14,7 @@ type SaveState = "idle" | "saving" | "fail" | "done" | "image";
 type OrderCardNavState = {
   restaurantId?: number;
   requests?: string[];
+  menuName: string;
   cardId?: number;
 };
 
@@ -48,6 +50,7 @@ export function OrderCard() {
           restaurantId: navState.restaurantId,
           requests: navState.requests ?? [],
         }}
+        menuName={navState.menuName}
         onClose={onClose}
       />
     );
@@ -105,53 +108,11 @@ function ErrorRetry({
   );
 }
 
-// 식당 상세에서 만들거나(POST), 기존 카드를 다시 보는(GET) 경우 — 둘 다 서버가 준
-// CardResponse를 그대로 그린다.
-function OrderCardApiView({
-  params,
-  onClose,
-}: {
-  params: OrderCardParams;
-  onClose: () => void;
-}) {
-  const cardState = useOrderCard(params);
-
-  const cardData: CardDrawData | null =
-    cardState.status === "ready"
-      ? {
-          allergyText: cardState.card.allergyBanner ?? "",
-          diseaseText: cardState.card.diseaseLine,
-          menuText: cardState.card.menuLine,
-          medsText: cardState.card.medsLine ?? "",
-          requestLines: cardState.card.requests.map((r) => r.phrase),
-          footerLines: cardState.card.footer,
-          disclaimer: cardState.card.disclaimer,
-        }
-      : null;
-
-  return (
-    <Shell onClose={onClose}>
-      {cardState.status === "loading" && (
-        <p className="text-[0.9375rem]">
-          {params.mode === "create"
-            ? "카드를 만드는 중..."
-            : "카드를 불러오는 중..."}
-        </p>
-      )}
-      {cardState.status === "error" && (
-        <ErrorRetry message={cardState.message} onRetry={cardState.reload} />
-      )}
-      {cardData && <CardBody cardData={cardData} />}
-    </Shell>
-  );
-}
-
-// 식당/메뉴 맥락 없이 Home에서 바로 들어온 경우 — 서버 카드 생성 없이 내 프로필을
-// 그대로 카드로 보여준다. requests는 서버가 채워줄 수 없어서(기준이 될 메뉴가 없음)
-// 여기서만 사용자가 직접 고른다.
-function OrderCardProfileView({ onClose }: { onClose: () => void }) {
-  const profileState = useProfile();
-  const [requests, setRequests] = useState<string[]>([]);
+// 요청 문구 체크박스 + 직접 입력 UI의 상태만 관리하는 훅.
+// API 카드(메뉴에서 만든 경우)와 프로필 카드가 완전히 동일한 방식으로 쓴다 —
+// 서버에 다시 저장하지 않고, 이 화면에 보여줄/이미지로 저장할 내용에만 반영된다.
+function useRequestPicker(initial: string[]) {
+  const [requests, setRequests] = useState<string[]>(initial);
   const [newRequest, setNewRequest] = useState("");
   const [isComposing, setIsComposing] = useState(false);
 
@@ -170,6 +131,163 @@ function OrderCardProfileView({ onClose }: { onClose: () => void }) {
     setNewRequest("");
   }
 
+  // DEFAULT_REQUESTS(기본 목록) + 이미 선택돼 있는데 기본 목록엔 없는 값들(직접 입력했거나
+  // 메뉴가 제안한 요청 등)을 뒤에 붙여서 하나의 체크리스트로 보여준다.
+  const requestOpts = DEFAULT_REQUESTS.concat(
+    requests.filter((r) => !DEFAULT_REQUESTS.includes(r)),
+  ).map((r) => ({ label: r, on: requests.includes(r) }));
+
+  return {
+    requests,
+    toggleRequest,
+    newRequest,
+    setNewRequest,
+    isComposing,
+    setIsComposing,
+    handleAddRequest,
+    requestOpts,
+  };
+}
+
+// "요청 고르기" 체크박스 목록 + 직접 적어 넣기 입력창 — 위 훅의 결과를 그대로 그린다.
+function RequestPickerFields({
+  picker,
+}: {
+  picker: ReturnType<typeof useRequestPicker>;
+}) {
+  return (
+    <>
+      <SectionHeader title="요청 고르기" />
+      <div className="flex flex-col">
+        {picker.requestOpts.map((o) => (
+          <button
+            key={o.label}
+            type="button"
+            onClick={() => picker.toggleRequest(o.label)}
+            className="flex w-full items-center gap-[12px] border-0 bg-transparent px-[2px] py-[11px] text-left text-ink"
+          >
+            <span
+              className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[2px] border-[1.5px] text-[0.75rem] ${
+                o.on
+                  ? "border-ink bg-ink text-cream"
+                  : "border-ink/30 bg-transparent text-transparent"
+              }`}
+            >
+              ✓
+            </span>
+            <span className="text-[0.96875rem]">{o.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-[14px] flex items-center gap-[8px] border-b-2 border-ink pb-[6px]">
+        <input
+          value={picker.newRequest}
+          onChange={(e) => picker.setNewRequest(e.target.value)}
+          onCompositionStart={() => picker.setIsComposing(true)}
+          onCompositionEnd={() => picker.setIsComposing(false)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            if (picker.isComposing || e.nativeEvent.isComposing) return;
+            e.preventDefault();
+            picker.handleAddRequest();
+          }}
+          placeholder="직접 적어 넣기"
+          className="min-w-0 flex-1 border-0 bg-transparent py-[4px] text-[0.96875rem] text-ink placeholder:text-ink/40"
+        />
+        <button
+          type="button"
+          onClick={picker.handleAddRequest}
+          disabled={!picker.newRequest.trim()}
+          className={`flex-none rounded-[3px] border-0 px-[13px] py-[7px] text-[0.875rem] font-bold ${
+            picker.newRequest.trim()
+              ? "cursor-pointer bg-ink text-[#f1efea]"
+              : "cursor-not-allowed bg-ink/[0.18] text-ink/45"
+          }`}
+        >
+          담기
+        </button>
+      </div>
+      <p className="mb-0 mt-[8px] text-xs leading-[1.6] text-ink/80">
+        적어 넣은 요청도 위 카드에 함께 반영됩니다.
+      </p>
+    </>
+  );
+}
+
+// 식당 상세에서 만들거나(POST), 기존 카드를 다시 보는(GET) 경우 — 로딩/에러 상태만
+// 처리하고, 준비되면 OrderCardApiReady로 넘긴다.
+function OrderCardApiView({
+  params,
+  menuName,
+  onClose,
+}: {
+  params: OrderCardParams;
+  menuName?: string;
+  onClose: () => void;
+}) {
+  const cardState = useOrderCard(params);
+
+  return (
+    <Shell onClose={onClose}>
+      {cardState.status === "loading" && (
+        <p className="text-[0.9375rem]">
+          {params.mode === "create"
+            ? "카드를 만드는 중..."
+            : "카드를 불러오는 중..."}
+        </p>
+      )}
+      {cardState.status === "error" && (
+        <ErrorRetry message={cardState.message} onRetry={cardState.reload} />
+      )}
+      {cardState.status === "ready" && (
+        <OrderCardApiReady
+          key={cardState.card.id}
+          card={cardState.card}
+          menuName={menuName}
+        />
+      )}
+    </Shell>
+  );
+}
+
+// 카드가 준비된 뒤에만 마운트된다. 서버가 내려준 requests를 초기값으로 삼아 이 화면에서
+// 기본 요청을 추가로 고르거나 뺄 수 있게 한다 — 서버 재호출은 없고 표시/저장 이미지에만
+// 반영. card.id가 바뀌면(다시 시도 등) key로 새로 마운트돼 requests가 새 카드 기준으로
+// 리셋된다.
+function OrderCardApiReady({
+  card,
+  menuName,
+}: {
+  card: CardResponse;
+  menuName?: string;
+}) {
+  const picker = useRequestPicker(card.requests.map((r) => r.phrase));
+
+  const cardData: CardDrawData = {
+    allergyText: card.allergyBanner ?? "",
+    diseaseText: card.diseaseLine,
+    menuText: menuName ?? card.menuLine,
+    medsText: card.medsLine ?? "",
+    requestLines: picker.requests,
+    footerLines: card.footer,
+    disclaimer: card.disclaimer,
+  };
+
+  return (
+    <>
+      <CardBody key={picker.requests.join("|")} cardData={cardData} />
+      <RequestPickerFields picker={picker} />
+    </>
+  );
+}
+
+// 식당/메뉴 맥락 없이 Home에서 바로 들어온 경우 — 서버 카드 생성 없이 내 프로필을
+// 그대로 카드로 보여준다.
+function OrderCardProfileView({ onClose }: { onClose: () => void }) {
+  const profileState = useProfile();
+  const picker = useRequestPicker([]);
+
   const cardData: CardDrawData | null =
     profileState.status === "ready"
       ? {
@@ -185,7 +303,7 @@ function OrderCardProfileView({ onClose }: { onClose: () => void }) {
             profileState.profile.medications.length
               ? `${profileState.profile.medications.join(" · ")} 복용 중입니다`
               : "",
-          requestLines: requests,
+          requestLines: picker.requests,
           footerLines: [
             "이 손님은 위 재료를 피해야 합니다.",
             "확인이 어려우면 알려 주세요.",
@@ -193,11 +311,6 @@ function OrderCardProfileView({ onClose }: { onClose: () => void }) {
           disclaimer: profileState.profile.disclaimer,
         }
       : null;
-
-  // DEFAULT_REQUESTS(기본 목록) + 사용자가 직접 적어 넣어서 기본 목록에는 없는 값들
-  const requestOpts = DEFAULT_REQUESTS.concat(
-    requests.filter((r) => !DEFAULT_REQUESTS.includes(r)),
-  ).map((r) => ({ label: r, on: requests.includes(r) }));
 
   return (
     <Shell onClose={onClose}>
@@ -212,62 +325,8 @@ function OrderCardProfileView({ onClose }: { onClose: () => void }) {
       )}
       {cardData && (
         <>
-          <CardBody key={requests.join("|")} cardData={cardData} />
-
-          <SectionHeader title="요청 고르기" />
-          <div className="flex flex-col">
-            {requestOpts.map((o) => (
-              <button
-                key={o.label}
-                type="button"
-                onClick={() => toggleRequest(o.label)}
-                className="flex w-full items-center gap-[12px] border-0 bg-transparent px-[2px] py-[11px] text-left text-ink"
-              >
-                <span
-                  className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[2px] border-[1.5px] text-[0.75rem] ${
-                    o.on
-                      ? "border-ink bg-ink text-cream"
-                      : "border-ink/30 bg-transparent text-transparent"
-                  }`}
-                >
-                  ✓
-                </span>
-                <span className="text-[0.96875rem]">{o.label}</span>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-[14px] flex items-center gap-[8px] border-b-2 border-ink pb-[6px]">
-            <input
-              value={newRequest}
-              onChange={(e) => setNewRequest(e.target.value)}
-              onCompositionStart={() => setIsComposing(true)}
-              onCompositionEnd={() => setIsComposing(false)}
-              onKeyDown={(e) => {
-                if (e.key !== "Enter") return;
-                if (isComposing || e.nativeEvent.isComposing) return;
-                e.preventDefault();
-                handleAddRequest();
-              }}
-              placeholder="직접 적어 넣기"
-              className="min-w-0 flex-1 border-0 bg-transparent py-[4px] text-[0.96875rem] text-ink placeholder:text-ink/40"
-            />
-            <button
-              type="button"
-              onClick={handleAddRequest}
-              disabled={!newRequest.trim()}
-              className={`flex-none rounded-[3px] border-0 px-[13px] py-[7px] text-[0.875rem] font-bold ${
-                newRequest.trim()
-                  ? "cursor-pointer bg-ink text-[#f1efea]"
-                  : "cursor-not-allowed bg-ink/[0.18] text-ink/45"
-              }`}
-            >
-              담기
-            </button>
-          </div>
-          <p className="mb-0 mt-[8px] text-xs leading-[1.6] text-ink/80">
-            적어 넣은 요청도 위 카드에 함께 반영됩니다.
-          </p>
+          <CardBody key={picker.requests.join("|")} cardData={cardData} />
+          <RequestPickerFields picker={picker} />
         </>
       )}
     </Shell>
@@ -275,8 +334,6 @@ function OrderCardProfileView({ onClose }: { onClose: () => void }) {
 }
 
 // 카드 박스 + 이미지로 저장하기 — API 카드/프로필 카드가 공유하는 부분.
-// cardData가 바뀌면(예: 프로필 카드에서 요청을 고르는 중) 저장했던 이미지는 이제 최신
-// 내용과 다르므로, 매번 새로 그리게 saveState/savedImage를 리셋한다.
 function CardBody({ cardData }: { cardData: CardDrawData }) {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [savedImage, setSavedImage] = useState<string | null>(null);
@@ -298,7 +355,6 @@ function CardBody({ cardData }: { cardData: CardDrawData }) {
     }
   }, [savedImage]);
 
-  // drawCard() — 카드 내용을 캔버스에 그려 PNG data URL로 반환
   function drawCard(): string | null {
     const W = 380;
     const S = 3;
@@ -481,7 +537,6 @@ function CardBody({ cardData }: { cardData: CardDrawData }) {
 
   return (
     <>
-      {/* 카드 박스 */}
       <div
         className="border-2 border-ink"
         style={{
