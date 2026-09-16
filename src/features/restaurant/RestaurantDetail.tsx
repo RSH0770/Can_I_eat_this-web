@@ -126,14 +126,11 @@ export function RestaurantDetail() {
               sug: m.suggestedRequests,
               toggle: () => setOpenMenuIndex((prev) => (prev === i ? null : i)),
               openCard: () => {
-                const merged = m.suggestedRequests.concat(
-                  requests.filter((r) => !m.suggestedRequests.includes(r)),
-                );
-                setRequests(merged);
                 navigate(`/restaurants/${restaurant.id}/order-card`, {
                   state: {
                     restaurantId: restaurant.id,
-                    requests: merged,
+                    requests,
+                    menuName: m.name,
                   },
                 });
               },
