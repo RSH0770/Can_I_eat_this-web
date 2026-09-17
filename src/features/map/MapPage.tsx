@@ -14,6 +14,7 @@ import type { SealKind } from "../../utils/seal";
 import type { ApiSeal } from "../restaurant/types";
 import { KakaoRestaurantMap, type MapMarkerData } from "./KakaoRestaurantMap";
 import { useRestaurantSearch } from "./useRestaurantSearch";
+import { createPortal } from "react-dom";
 
 const STROKE_GRADIENT =
   "linear-gradient(90deg, var(--color-ink) 0%, var(--color-ink) 62%, rgba(26,24,21,.35) 86%, rgba(26,24,21,0) 100%)";
@@ -68,6 +69,7 @@ export function MapPage() {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [mapFull, setMapFull] = useState(false);
+  const [resetToken, setResetToken] = useState(0);
 
   // 타이핑마다 서버에 요청을 보내지 않도록 짧게 디바운스한 뒤에만 실제 검색어(query)를 갱신
   useEffect(() => {
@@ -256,34 +258,50 @@ export function MapPage() {
       <div className="h-[10px]" />
 
       {/* 전체화면 지도 — 탭바까지 덮는 오버레이 */}
-      {mapFull && (
-        <div className="fixed inset-0 z-50">
-          <KakaoRestaurantMap
-            markers={markerData}
-            center={mapCenter}
-            myLocation={searchState.coords}
-            height="100%"
-            level={7}
-            big
-            onMarkerClick={(id) => {
-              setMapFull(false);
-              openRestaurant(id);
-            }}
-          />
-          <div className="pointer-events-none absolute left-[22px] right-[22px] top-[58px] flex items-center gap-[10px]">
-            <button
-              type="button"
-              onClick={() => setMapFull(false)}
-              className="pointer-events-auto cursor-pointer rounded-[3px] border-0 bg-ink px-[16px] py-[10px] text-[0.9375rem] font-bold text-cream"
-            >
-              〈 목록
-            </button>
-            <span className="pointer-events-auto border border-ink/20 bg-[rgba(233,231,226,.9)] px-[12px] py-[8px] text-xs">
-              {totalCount}곳
-            </span>
-          </div>
-        </div>
-      )}
+      {mapFull &&
+        createPortal(
+          <div className="absolute inset-0 z-50">
+            <KakaoRestaurantMap
+              markers={markerData}
+              center={mapCenter}
+              myLocation={searchState.coords}
+              height="100%"
+              level={7}
+              big
+              resetToken={resetToken}
+              onMarkerClick={(id) => {
+                setMapFull(false);
+                openRestaurant(id);
+              }}
+            />
+            <div className="pointer-events-none absolute left-[20px] right-[20px] top-[18px] z-20 flex items-center gap-[10px]">
+              <button
+                type="button"
+                onClick={() => setMapFull(false)}
+                className="pointer-events-auto cursor-pointer rounded-[3px] border-0 bg-ink px-[16px] py-[10px] text-[0.9375rem] font-bold text-cream"
+              >
+                〈 목록
+              </button>
+              <span className="pointer-events-auto border border-ink/20 bg-[rgba(233,231,226,.9)] px-[12px] py-[8px] text-xs">
+                {totalCount}곳
+              </span>
+              <div className="flex-1" />
+              <button
+                type="button"
+                onClick={() => setResetToken((t) => t + 1)}
+                className="pointer-events-auto cursor-pointer rounded-[3px] border border-ink/20 bg-[rgba(233,231,226,.9)] px-[12px] py-[8px] text-xs font-bold text-ink"
+              >
+                처음 위치
+              </button>
+            </div>
+            <div className="pointer-events-none absolute bottom-[18px] left-[20px] z-20">
+              <span className="pointer-events-auto border border-ink/20 bg-[rgba(233,231,226,.9)] px-[12px] py-[8px] text-xs text-ink/70">
+                끌어서 이동
+              </span>
+            </div>
+          </div>,
+          document.getElementById("phone-frame") ?? document.body,
+        )}
     </div>
   );
 }
