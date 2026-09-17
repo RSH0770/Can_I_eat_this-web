@@ -5,7 +5,7 @@ import { Seal } from "../../components/Seal";
 import { SectionHeader } from "../../components/SectionHeader";
 import { useFontScale } from "../../context/FontScaleContext";
 import { SCREEN_ENTER } from "../../constants/animation";
-import { COMMUNITY_REVIEWS } from "../../constants/mockCommunityReviews";
+import { useRestaurantReports } from "./useRestaurantReports";
 import type { SealKind } from "../../utils/seal";
 import { useRestaurantDetail } from "./useRestaurantDetail";
 import type { ApiSeal } from "./types";
@@ -45,6 +45,7 @@ export function RestaurantDetail() {
   const [requests, setRequests] = useState<string[]>([]);
 
   const restaurantState = useRestaurantDetail(restaurantId);
+  const reportsState = useRestaurantReports(restaurantId);
 
   function goBack() {
     navigate(-1);
@@ -107,7 +108,6 @@ export function RestaurantDetail() {
       {restaurantState.status === "ready" &&
         (() => {
           const restaurant = restaurantState.restaurant;
-          const reviews = COMMUNITY_REVIEWS[restaurant.id] ?? [];
 
           const menuRows = restaurant.menus.map((m, i) => {
             const open = openMenuIndex === i;
@@ -269,33 +269,69 @@ export function RestaurantDetail() {
                 ))}
               </div>
 
-              {/* 후기 — 이번 PR 범위 밖, mock 그대로 */}
-              <SectionHeader title={`후기 ${reviews.length}개`} />
-              <div className="flex flex-col gap-[16px]">
-                {reviews.map((v, i) => (
-                  <div key={i} className="flex gap-[12px]">
-                    <Seal kind={v.ok ? "ok" : "red"} size={28} />
-                    <div className="flex-1">
-                      <div className="text-[0.84375rem] font-bold">
-                        {v.who}
-                        <span className="font-normal"> · {v.date}</span>
-                      </div>
-                      <p className="m-0 mt-[6px] text-[0.84375rem] leading-[1.7]">
-                        {v.note}
-                      </p>
-                      {v.feedback.length > 0 && (
-                        <div className="mt-[6px] flex flex-wrap gap-[10px]">
-                          {v.feedback.map((f) => (
-                            <span key={f} className="text-xs">
-                              · {f}
-                            </span>
-                          ))}
+              {/* 후기 */}
+              <SectionHeader
+                title={
+                  reportsState.status === "ready"
+                    ? `후기 ${reportsState.data.count}개`
+                    : "후기"
+                }
+              />
+              {reportsState.status === "loading" && (
+                <p className="text-[0.84375rem]">불러오는 중…</p>
+              )}
+              {reportsState.status === "error" && (
+                <div>
+                  <p className="text-[0.84375rem] text-[#a6301f]">
+                    {reportsState.message}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={reportsState.reload}
+                    className="mt-[10px] border-[1.5px] border-ink bg-transparent px-[14px] py-[8px] text-[0.84375rem] font-bold text-ink transition-colors hover:bg-ink/[0.06]"
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              )}
+              {reportsState.status === "ready" &&
+                (reportsState.data.reviews.length === 0 ? (
+                  <p className="m-0 text-[0.84375rem]">아직 후기가 없습니다.</p>
+                ) : (
+                  <div className="flex flex-col gap-[16px]">
+                    {reportsState.data.reviews.map((v) => (
+                      <div key={v.id} className="flex gap-[12px]">
+                        <Seal kind={v.ok ? "ok" : "red"} size={28} />
+                        <div className="flex-1">
+                          <div className="text-[0.84375rem] font-bold">
+                            {v.author}
+                            <span className="font-normal"> · {v.date}</span>
+                            {v.mine && (
+                              <span className="font-normal">
+                                {" "}
+                                · 내가 쓴 후기
+                              </span>
+                            )}
+                          </div>
+                          {v.note && (
+                            <p className="m-0 mt-[6px] text-[0.84375rem] leading-[1.7]">
+                              {v.note}
+                            </p>
+                          )}
+                          {v.feedback.length > 0 && (
+                            <div className="mt-[6px] flex flex-wrap gap-[10px]">
+                              {v.feedback.map((f) => (
+                                <span key={f} className="text-xs">
+                                  · {f}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ))}
                   </div>
                 ))}
-              </div>
 
               <p className="mt-[14px] text-xs leading-[1.75] text-ink/80">
                 {restaurant.disclaimer}
@@ -316,7 +352,11 @@ export function RestaurantDetail() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {}}
+                  onClick={() =>
+                    navigate(`/restaurants/${restaurant.id}/report`, {
+                      state: { restaurantId: restaurant.id, requests },
+                    })
+                  }
                   className="cursor-pointer rounded-[3px] border-[1.5px] border-ink bg-transparent p-[12px] text-[0.96875rem] text-ink"
                 >
                   다녀왔어요 · 후기 남기기
