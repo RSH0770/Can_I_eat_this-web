@@ -16,6 +16,7 @@ import { FontScaleProvider } from "./context/FontScaleProvider.tsx";
 import { OrderCard } from "./features/home/OrderCard/OrderCard.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
+import { WriteReport } from "./features/report/WriteReport.tsx";
 
 export default function App() {
   return (
@@ -32,6 +33,10 @@ export default function App() {
               <Route
                 path="/restaurants/:restaurantId/order-card"
                 element={<OrderCard />}
+              />
+              <Route
+                path="/restaurants/:restaurantId/report"
+                element={<WriteReport />}
               />
 
               <Route element={<ProtectedRoute />}>
