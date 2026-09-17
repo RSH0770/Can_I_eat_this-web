@@ -4,6 +4,8 @@ import { useFontScale } from "../../context/FontScaleContext";
 import { SCREEN_ENTER } from "../../constants/animation";
 import AppLogo from "../../assets/AppLogo.png";
 import { useProfile } from "./useProfile";
+import { useMyReports } from "./useMyReports";
+import { Seal } from "../../components/Seal";
 import type { ProfileResponse } from "./types";
 
 const STROKE_GRADIENT =
@@ -23,7 +25,13 @@ function Chip({ label, danger }: { label: string; danger?: boolean }) {
   );
 }
 
-function ProfileView({ profile }: { profile: ProfileResponse }) {
+function ProfileView({
+  profile,
+  reportsState,
+}: {
+  profile: ProfileResponse;
+  reportsState: ReturnType<typeof useMyReports>;
+}) {
   const metaParts = [
     profile.birthYear ? `${profile.birthYear}년생` : "",
     profile.bloodType ?? "",
@@ -97,12 +105,55 @@ function ProfileView({ profile }: { profile: ProfileResponse }) {
       )}
 
       <SectionHeader title="내 기록" />
-      {/* TODO: 주문카드·제보(3-5) API 연동 후 실제 방문 기록 리스트로 교체 */}
-      <p className="m-0 text-[0.9375rem]">
-        아직 기록이 없습니다. 식당 화면에서 다녀왔어요를 누르면 여기에 쌓입니다.
-      </p>
-
-      <p className="mt-[26px] text-xs leading-[1.75]">{profile.disclaimer}</p>
+      {reportsState.status === "loading" && (
+        <p className="m-0 text-[0.9375rem]">불러오는 중…</p>
+      )}
+      {reportsState.status === "error" && (
+        <div>
+          <p className="text-[0.9375rem] text-[#a6301f]">
+            {reportsState.message}
+          </p>
+          <button
+            type="button"
+            onClick={reportsState.reload}
+            className="mt-[10px] border-[1.5px] border-ink bg-transparent px-[14px] py-[8px] text-[0.84375rem] font-bold text-ink transition-colors hover:bg-ink/[0.06]"
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
+      {reportsState.status === "ready" &&
+        (reportsState.reviews.length === 0 ? (
+          <p className="m-0 text-[0.9375rem]">
+            아직 기록이 없습니다. 식당 화면에서 다녀왔어요를 누르면 여기에
+            쌓입니다.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-[16px]">
+            {reportsState.reviews.map((v) => (
+              <div key={v.id} className="flex gap-[12px]">
+                <Seal kind={v.ok ? "ok" : "red"} size={28} />
+                <div className="flex-1">
+                  <div className="text-[0.84375rem] font-bold">{v.date}</div>
+                  {v.note && (
+                    <p className="m-0 mt-[6px] text-[0.84375rem] leading-[1.7]">
+                      {v.note}
+                    </p>
+                  )}
+                  {v.feedback.length > 0 && (
+                    <div className="mt-[6px] flex flex-wrap gap-[10px]">
+                      {v.feedback.map((f) => (
+                        <span key={f} className="text-xs">
+                          · {f}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
     </>
   );
 }
@@ -110,6 +161,7 @@ function ProfileView({ profile }: { profile: ProfileResponse }) {
 export function Me() {
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
   const state = useProfile();
+  const reportsState = useMyReports();
 
   return (
     <div
@@ -150,7 +202,9 @@ export function Me() {
         </div>
       )}
 
-      {state.status === "ready" && <ProfileView profile={state.profile} />}
+      {state.status === "ready" && (
+        <ProfileView profile={state.profile} reportsState={reportsState} />
+      )}
     </div>
   );
 }
