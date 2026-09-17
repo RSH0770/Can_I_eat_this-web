@@ -85,6 +85,7 @@ type KakaoRestaurantMapProps = {
   level?: number;
   big?: boolean;
   myLocation?: { lat: number; lng: number } | null;
+  resetToken?: number;
   onMarkerClick: (id: string) => void;
   onMapClick?: () => void;
 };
@@ -96,6 +97,7 @@ export function KakaoRestaurantMap({
   level = 8,
   big = false,
   myLocation = null,
+  resetToken,
   onMarkerClick,
   onMapClick,
 }: KakaoRestaurantMapProps) {
@@ -116,7 +118,7 @@ export function KakaoRestaurantMap({
     if (big) {
       map.addControl(
         new kakao.maps.ZoomControl(),
-        kakao.maps.ControlPosition.RIGHT,
+        kakao.maps.ControlPosition.BOTTOMRIGHT,
       );
     }
     mapRef.current = map;
@@ -149,6 +151,7 @@ export function KakaoRestaurantMap({
     myLocation?.lat,
     myLocation?.lng,
     markers,
+    resetToken,
   ]);
 
   // 지도 "빈 공간" 탭 리스너 — 마커 클릭은 마커 엘리먼트 자체의 click에서 stopPropagation하므로 여기로 전파되지 않움
