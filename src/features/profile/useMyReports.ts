@@ -43,5 +43,32 @@ export function useMyReports() {
     fetchReports();
   }, [fetchReports]);
 
-  return { ...state, reload };
+  const deleteReport = useCallback(
+    async (id: ReviewView["id"]) => {
+      if (!token) return;
+      try {
+        await apiFetch<void>(`/api/me/reports/${id}`, {
+          method: "DELETE",
+          token,
+        });
+        setState((prev) =>
+          prev.status === "ready"
+            ? {
+                status: "ready",
+                reviews: prev.reviews.filter((r) => r.id !== id),
+              }
+            : prev,
+        );
+      } catch (e) {
+        alert(
+          e instanceof ApiError
+            ? e.message
+            : "삭제하지 못했습니다. 다시 시도해 주세요.",
+        );
+      }
+    },
+    [token],
+  );
+
+  return { ...state, reload, deleteReport };
 }
