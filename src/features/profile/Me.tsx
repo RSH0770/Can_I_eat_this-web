@@ -217,9 +217,7 @@ export function Me() {
           canDecrease={canDecrease}
         />
       </div>
-      <h1 className="mt-[10px] text-[1.5rem] font-bold tracking-[-0.01em]">
-        프로필
-      </h1>
+      <h1 className="text-[1.5rem] font-bold tracking-[-0.01em]">프로필</h1>
       <div
         className="mt-[9px] h-[3px] rounded-[2px]"
         style={{ background: STROKE_GRADIENT }}

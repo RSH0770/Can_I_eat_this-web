@@ -115,7 +115,7 @@ export function MapPage() {
           canDecrease={canDecrease}
         />
       </div>
-      <h1 className="mt-[10px] text-[1.875rem] font-bold">지도</h1>
+      <h1 className="text-[1.875rem] font-bold">지도</h1>
       <div
         className="mt-[9px] h-[3px] rounded-[2px]"
         style={{ background: STROKE_GRADIENT }}
