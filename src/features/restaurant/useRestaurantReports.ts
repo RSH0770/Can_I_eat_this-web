@@ -4,6 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 
 export type ReviewView = {
   id: number;
+  restaurantId: number;
+  restaurantName: string;
   author: string;
   mine: boolean;
   date: string;

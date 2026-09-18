@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, ApiError } from "../../../lib/apiClient";
 import { useAuth } from "../../../context/AuthContext";
 import type { CardResponse } from "./types";
+import { rememberPendingCard } from "../../../lib/orderCardLinks";
 
 export type OrderCardParams =
   | { mode: "existing"; cardId: number }
@@ -39,6 +40,9 @@ export function useOrderCard(params: OrderCardParams) {
                 ...(p.requests.length > 0 ? { requests: p.requests } : {}),
               },
             });
+      if (p.mode === "create") {
+        rememberPendingCard(p.restaurantId, card.id);
+      }
       setState({ status: "ready", card });
     } catch (e) {
       setState({

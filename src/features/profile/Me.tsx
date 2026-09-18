@@ -7,6 +7,8 @@ import { useProfile } from "./useProfile";
 import { useMyReports } from "./useMyReports";
 import { Seal } from "../../components/Seal";
 import type { ProfileResponse } from "./types";
+import { useNavigate } from "react-router-dom";
+import { getLinkedCardId } from "../../lib/orderCardLinks";
 
 const STROKE_GRADIENT =
   "linear-gradient(90deg, var(--color-ink) 0%, var(--color-ink) 62%, rgba(26,24,21,.35) 86%, rgba(26,24,21,0) 100%)";
@@ -32,6 +34,7 @@ function ProfileView({
   profile: ProfileResponse;
   reportsState: ReturnType<typeof useMyReports>;
 }) {
+  const navigate = useNavigate();
   const metaParts = [
     profile.birthYear ? `${profile.birthYear}년생` : "",
     profile.bloodType ?? "",
@@ -135,27 +138,34 @@ function ProfileView({
                 <Seal kind={v.ok ? "ok" : "red"} size={28} />
                 <div className="flex-1">
                   <div className="flex items-center gap-[8px]">
-                    <div>
-                      <div className="flex-1 text-[0.84375rem] font-bold">
-                        {v.date}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm("이 기록을 삭제할까요?")) {
-                            reportsState.deleteReport(v.id);
-                          }
-                        }}
-                        className="flex-none border-0 bg-transparent p-0 text-xs text-ink/50 underline underline-offset-[3px]"
-                      >
-                        삭제
-                      </button>
+                    <div className="flex-1 text-[0.84375rem] font-bold">
+                      {v.restaurantName} · {v.date}
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm("이 기록을 삭제할까요?")) {
+                          reportsState.deleteReport(v.id);
+                        }
+                      }}
+                      className="flex-none border-0 bg-transparent p-0 text-xs text-ink/50 underline underline-offset-[3px]"
+                    >
+                      삭제
+                    </button>
                   </div>
                   {v.note && (
                     <p className="m-0 mt-[6px] text-[0.84375rem] leading-[1.7]">
                       {v.note}
                     </p>
+                  )}
+                  {v.requests.length > 0 && (
+                    <div className="mt-[6px] flex flex-wrap gap-[10px]">
+                      {v.requests.map((r) => (
+                        <span key={r} className="text-xs text-ink/70">
+                          그때 요청: {r}
+                        </span>
+                      ))}
+                    </div>
                   )}
                   {v.feedback.length > 0 && (
                     <div className="mt-[6px] flex flex-wrap gap-[10px]">
@@ -165,6 +175,19 @@ function ProfileView({
                         </span>
                       ))}
                     </div>
+                  )}
+                  {getLinkedCardId(v.id) != null && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate("/order-card", {
+                          state: { cardId: getLinkedCardId(v.id) },
+                        })
+                      }
+                      className="mt-[8px] border-[1.5px] border-ink/30 bg-transparent px-[10px] py-[5px] text-xs font-bold text-ink"
+                    >
+                      그때 카드 다시보기
+                    </button>
                   )}
                 </div>
               </div>
