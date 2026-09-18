@@ -8,19 +8,15 @@ import { useProfile } from "../profile/useProfile";
 // TODO: 주문 요청 카드의 "요청 5가지" 로직(3-5)이 붙기 전까지는 목업 유지
 const REQUEST_COUNT = 2;
 
-const REGION_FOOD_TITLE = "강릉 지역 음식";
+const REGION_FOOD_TITLE = "지역 음식";
 
-// TODO: 실제 지역 음식 데이터(FOODS)로 교체
-const REGION_FOOD_PREVIEW_NAMES = ["초당 순두부", "감자 옹심이", "물회"];
+// TODO: 백엔드에서 지역 음식 데이터(GET /api/foods 등) 준비되면 교체
+const REGION_FOOD_PREVIEW_TEXT = "여행지에 맞는 음식을 모아드려요";
 
 export function Home() {
   const navigate = useNavigate();
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
   const state = useProfile();
-
-  const foodNames = REGION_FOOD_PREVIEW_NAMES.map(
-    (name) => name.split(" ").slice(-1)[0],
-  ).join(" · ");
 
   function handleOpenCard() {
     // TODO: 주문 요청 카드 진입
@@ -125,7 +121,7 @@ export function Home() {
               </span>
               <span className="flex-1" />
               <span className="border-t border-ink/20 pt-[12px] text-[0.84375rem]">
-                {foodNames}
+                {REGION_FOOD_PREVIEW_TEXT}
               </span>
             </button>
           </div>
