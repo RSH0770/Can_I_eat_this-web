@@ -6,9 +6,3 @@ export const MOCK_ALLERGIES = ["새우", "고등어"];
 
 // 당뇨 페르소나 가정 (질환↔주의성분 매핑 기준으로는 당류·정제 탄수화물)
 export const MOCK_CARES = ["정제 탄수화물", "당류"];
-
-// 주문 요청 카드(OrderCard)의 "질환" 표시줄(diseaseText)에 쓰임
-// MOCK_CARES와 이름이 다른 별개 값이니 혼동 주의. 위 당뇨 페르소나 가정과 맞춰 "당뇨"로 둠
-export const MOCK_DISEASES = ["당뇨"];
-
-export const MOCK_REQUEST_COUNT = 2;
