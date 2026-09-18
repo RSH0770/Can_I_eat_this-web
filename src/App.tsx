@@ -3,7 +3,6 @@ import { PhoneFrame } from "./layouts/PhoneFrame.tsx";
 import { MainLayout } from "./layouts/MainLayout.tsx";
 import { Splash } from "./features/auth/Splash.tsx";
 import { Login } from "./features/auth/Login.tsx";
-import { FindAccount } from "./features/auth/FindAccount.tsx";
 import { Signup } from "./features/auth/Signup.tsx";
 import { Home } from "./features/home/Home.tsx";
 import { FoodList } from "./features/home/FoodList.tsx";
@@ -27,7 +26,6 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Splash />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/find-account" element={<FindAccount />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/order-card" element={<OrderCard />} />
               <Route
