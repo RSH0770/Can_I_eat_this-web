@@ -205,7 +205,7 @@ export function Me() {
 
   return (
     <div
-      className={`${SCREEN_ENTER} flex min-h-full flex-col px-[22px] pb-[26px] pt-[58px] text-ink`}
+      className={`${SCREEN_ENTER} flex min-h-full flex-col px-[22px] pb-[26px] pt-[16px] text-ink`}
     >
       {/* 상단바 — 뒤로가기 없는 탭 화면(Home.tsx와 동일 패턴) */}
       <div className="flex min-h-[34px] items-center">
@@ -217,9 +217,7 @@ export function Me() {
           canDecrease={canDecrease}
         />
       </div>
-      <h1 className="mt-[10px] text-[1.5rem] font-bold tracking-[-0.01em]">
-        프로필
-      </h1>
+      <h1 className="text-[1.5rem] font-bold tracking-[-0.01em]">프로필</h1>
       <div
         className="mt-[9px] h-[3px] rounded-[2px]"
         style={{ background: STROKE_GRADIENT }}

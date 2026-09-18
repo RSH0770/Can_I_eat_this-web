@@ -103,7 +103,7 @@ export function MapPage() {
 
   return (
     <div
-      className={`${SCREEN_ENTER} flex min-h-full flex-col px-[22px] pb-[10px] pt-[58px] text-ink`}
+      className={`${SCREEN_ENTER} flex min-h-full flex-col px-[22px] pb-[10px] pt-[16px] text-ink`}
     >
       {/* 상단바 — 탭 루트 화면이라 뒤로가기 없음, 스테퍼만 오른쪽 정렬 */}
       <div className="flex min-h-[34px] items-center">
@@ -115,7 +115,7 @@ export function MapPage() {
           canDecrease={canDecrease}
         />
       </div>
-      <h1 className="mt-[10px] text-[1.875rem] font-bold">지도</h1>
+      <h1 className="text-[1.875rem] font-bold">지도</h1>
       <div
         className="mt-[9px] h-[3px] rounded-[2px]"
         style={{ background: STROKE_GRADIENT }}
