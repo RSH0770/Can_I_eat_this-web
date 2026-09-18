@@ -134,7 +134,24 @@ function ProfileView({
               <div key={v.id} className="flex gap-[12px]">
                 <Seal kind={v.ok ? "ok" : "red"} size={28} />
                 <div className="flex-1">
-                  <div className="text-[0.84375rem] font-bold">{v.date}</div>
+                  <div className="flex items-center gap-[8px]">
+                    <div>
+                      <div className="flex-1 text-[0.84375rem] font-bold">
+                        {v.date}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm("이 기록을 삭제할까요?")) {
+                            reportsState.deleteReport(v.id);
+                          }
+                        }}
+                        className="flex-none border-0 bg-transparent p-0 text-xs text-ink/50 underline underline-offset-[3px]"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
                   {v.note && (
                     <p className="m-0 mt-[6px] text-[0.84375rem] leading-[1.7]">
                       {v.note}
