@@ -110,24 +110,9 @@ export function Login() {
         {submitting ? "로그인 중..." : "로그인"}
       </button>
 
-      {/* 아이디 / 비밀번호 찾기 */}
-      <div className="mt-[14px] flex items-center justify-center gap-[8px]">
-        <button
-          type="button"
-          onClick={() => navigate("/find-account?mode=id")}
-          className="border-0 bg-transparent px-[4px] py-[10px] text-[0.90625rem] text-ink underline underline-offset-[3px]"
-        >
-          아이디 찾기
-        </button>
-        <span className="opacity-40">·</span>
-        <button
-          type="button"
-          onClick={() => navigate("/find-account?mode=pw")}
-          className="border-0 bg-transparent px-[4px] py-[10px] text-[0.90625rem] text-ink underline underline-offset-[3px]"
-        >
-          비밀번호 찾기
-        </button>
-      </div>
+      <p className="mt-[14px] text-center text-[0.84375rem] text-ink/60">
+        아이디·비밀번호를 잊으셨다면 새로 가입해 주세요.
+      </p>
 
       <div className="flex-1" />
 
