@@ -205,7 +205,7 @@ export function Me() {
 
   return (
     <div
-      className={`${SCREEN_ENTER} flex min-h-full flex-col px-[22px] pb-[26px] pt-[58px] text-ink`}
+      className={`${SCREEN_ENTER} flex min-h-full flex-col px-[22px] pb-[26px] pt-[16px] text-ink`}
     >
       {/* 상단바 — 뒤로가기 없는 탭 화면(Home.tsx와 동일 패턴) */}
       <div className="flex min-h-[34px] items-center">
