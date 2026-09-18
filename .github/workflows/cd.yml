@@ -23,6 +23,9 @@ jobs:
         run: |
           npm install
           npm run build
+        env:
+          VITE_KAKAO_MAP_KEY: ${{ secrets.VITE_KAKAO_MAP_KEY }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
       
       # 빌드 파일 전송 (배포 파일 업로드)
       - name: Copy build files
