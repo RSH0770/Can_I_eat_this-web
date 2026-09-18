@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import { apiFetch, ApiError } from "../../lib/apiClient";
 import { useAuth } from "../../context/AuthContext";
+import { linkReportToPendingCard } from "../../lib/orderCardLinks";
+import type { ReviewView } from "../restaurant/useRestaurantReports";
 
 export type SubmitReportPayload = {
   restaurantId: number;
@@ -24,7 +26,7 @@ export function useSubmitReport() {
     async (payload: SubmitReportPayload): Promise<boolean> => {
       setState({ status: "submitting" });
       try {
-        await apiFetch("/api/reports", {
+        const created = await apiFetch<ReviewView>("/api/reports", {
           method: "POST",
           token,
           body: {
@@ -39,6 +41,7 @@ export function useSubmitReport() {
               : {}),
           },
         });
+        linkReportToPendingCard(payload.restaurantId, created.id);
         setState({ status: "done" });
         return true;
       } catch (e) {
