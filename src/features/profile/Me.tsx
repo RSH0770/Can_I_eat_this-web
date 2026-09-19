@@ -51,16 +51,12 @@ function ProfileView({
         <div className="flex-1">
           <div className="text-[1.625rem] font-bold">{profile.name} 님</div>
           <div className="mt-[5px] text-xs">{profileMeta}</div>
-          {/* TODO: 프로필 수정(PUT /api/me/profile) 화면이 생기면 button + onClick으로 교체 */}
-          <span className="mt-[12px] inline-flex items-center gap-[6px] border-[1.5px] border-ink px-[12px] py-[6px] text-xs text-ink">
-            질환·주의 성분·알레르기 고치기 〉
-          </span>
         </div>
         <img src={AppLogo} alt="" className="h-[50px] w-auto flex-none" />
       </div>
 
       {allergyText && (
-        <div className="relative mt-[18px] bg-ink p-[16px] text-cream">
+        <div className="relative mt-[18px] bg-ink p-[16px] pr-[54px] text-cream">
           <div className="text-xs tracking-[.1em]">꼭 확인해 주세요</div>
           <div className="mt-[6px] text-[1.3125rem] font-bold leading-[1.4]">
             {allergyText}
@@ -162,7 +158,7 @@ function ProfileView({
                     <div className="mt-[6px] flex flex-wrap gap-[10px]">
                       {v.requests.map((r) => (
                         <span key={r} className="text-xs text-ink/70">
-                          그때 요청: {r}
+                          요청 사항: {r}
                         </span>
                       ))}
                     </div>

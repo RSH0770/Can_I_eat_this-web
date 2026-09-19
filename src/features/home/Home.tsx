@@ -5,9 +5,6 @@ import { SCREEN_ENTER } from "../../constants/animation";
 import AppLogo from "../../assets/AppLogo.png";
 import { useProfile } from "../profile/useProfile";
 
-// TODO: 주문 요청 카드의 "요청 5가지" 로직(3-5)이 붙기 전까지는 목업 유지
-const REQUEST_COUNT = 2;
-
 const REGION_FOOD_TITLE = "지역 음식";
 
 // TODO: 백엔드에서 지역 음식 데이터(GET /api/foods 등) 준비되면 교체
@@ -102,9 +99,9 @@ export function Home() {
               </span>
               <span className="flex-1" />
               <span className="border-t border-cream/30 pt-[14px] text-[0.84375rem]">
-                {state.profile.allergies.length
-                  ? `${state.profile.allergies.join(" · ")} · 요청 ${REQUEST_COUNT}개`
-                  : `요청 ${REQUEST_COUNT}개`}
+                {state.profile.allergies.length > 0
+                  ? `${state.profile.allergies.join(" · ")} · 요청 ${state.profile.allergies.length}개`
+                  : `요청 사항을 확인해요`}
               </span>
             </button>
 
