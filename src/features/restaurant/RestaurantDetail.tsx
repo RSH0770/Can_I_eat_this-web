@@ -151,6 +151,7 @@ export function RestaurantDetail() {
                   state: {
                     restaurantId: restaurant.id,
                     requests,
+                    menuId: m.id,
                     menuName: m.name,
                   },
                 });
