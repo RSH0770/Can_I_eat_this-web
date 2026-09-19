@@ -56,7 +56,7 @@ function ProfileView({
       </div>
 
       {allergyText && (
-        <div className="relative mt-[18px] bg-ink p-[16px] text-cream">
+        <div className="relative mt-[18px] bg-ink p-[16px] pr-[54px] text-cream">
           <div className="text-xs tracking-[.1em]">꼭 확인해 주세요</div>
           <div className="mt-[6px] text-[1.3125rem] font-bold leading-[1.4]">
             {allergyText}
