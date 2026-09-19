@@ -251,7 +251,7 @@ export function Signup() {
           <button
             type="button"
             onClick={handleBack}
-            disabled={nextDisabled}
+            disabled={submitting}
             className="border-0 bg-transparent p-0 text-[0.9375rem] text-ink"
           >
             〈 뒤로
@@ -577,8 +577,7 @@ export function Signup() {
 
             <p className="mt-[20px] text-xs leading-[1.75]">
               입력하신 건강 정보(질환·알레르기·복용약)는 암호화되어 서버에
-              저장되며, 메뉴 판정과 주문 카드에만 사용됩니다. 내 정보에서 언제든
-              고칠 수 있습니다.
+              저장되며, 메뉴 판정과 주문 카드에만 사용됩니다.
             </p>
           </>
         )}
