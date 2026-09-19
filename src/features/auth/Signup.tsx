@@ -251,7 +251,7 @@ export function Signup() {
           <button
             type="button"
             onClick={handleBack}
-            disabled={nextDisabled}
+            disabled={submitting}
             className="border-0 bg-transparent p-0 text-[0.9375rem] text-ink"
           >
             〈 뒤로
