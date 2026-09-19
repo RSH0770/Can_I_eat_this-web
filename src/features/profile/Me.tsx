@@ -182,7 +182,7 @@ function ProfileView({
                       }
                       className="mt-[8px] border-[1.5px] border-ink/30 bg-transparent px-[10px] py-[5px] text-xs font-bold text-ink"
                     >
-                      그때 카드 다시보기
+                      주문 요청 카드 다시보기
                     </button>
                   )}
                 </div>

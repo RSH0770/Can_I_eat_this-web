@@ -4,16 +4,26 @@ import { useFontScale } from "../../context/FontScaleContext";
 import { SCREEN_ENTER } from "../../constants/animation";
 import AppLogo from "../../assets/AppLogo.png";
 import { useProfile } from "../profile/useProfile";
+import { useGeolocation } from "../../hooks/useGeolocation";
+import { useRegionalFoods } from "./useRegionalFoods";
 
 const REGION_FOOD_TITLE = "지역 음식";
-
-// TODO: 백엔드에서 지역 음식 데이터(GET /api/foods 등) 준비되면 교체
-const REGION_FOOD_PREVIEW_TEXT = "여행지에 맞는 음식을 모아드려요";
 
 export function Home() {
   const navigate = useNavigate();
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
   const state = useProfile();
+  const geo = useGeolocation();
+  const foodsState = useRegionalFoods(
+    geo.status === "ready" ? geo.coords : null,
+  );
+
+  const regionLabel =
+    foodsState.status === "ready" ? foodsState.result.region : null;
+  const foodPreviewText =
+    foodsState.status === "ready" && foodsState.result.items.length > 0
+      ? `${foodsState.result.items.length}가지 지역 음식이 있어요`
+      : "여행지에 맞는 음식을 모아드려요";
 
   function handleOpenCard() {
     // TODO: 주문 요청 카드 진입
@@ -40,7 +50,9 @@ export function Home() {
       </div>
 
       {/* 타이틀 */}
-      <h1 className="text-[1.875rem] font-bold">강릉 · 여행 중</h1>
+      <h1 className="text-[1.875rem] font-bold">
+        {regionLabel ? `${regionLabel} · 여행 중` : "여행 중"}
+      </h1>
       <div
         className="mt-[9px] h-[3px] rounded-[2px]"
         style={{
@@ -118,7 +130,7 @@ export function Home() {
               </span>
               <span className="flex-1" />
               <span className="border-t border-ink/20 pt-[12px] text-[0.84375rem]">
-                {REGION_FOOD_PREVIEW_TEXT}
+                {foodPreviewText}
               </span>
             </button>
           </div>
