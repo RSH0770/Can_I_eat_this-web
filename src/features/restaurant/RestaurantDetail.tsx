@@ -44,6 +44,18 @@ function renderMultiline(text: string) {
   ));
 }
 
+function formatDistance(m: number) {
+  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+}
+
+function metaHasDistance(meta: string, distanceText: string) {
+  return meta.includes(distanceText);
+}
+
+function metaHasWalkTime(meta: string, walkMinutes: number) {
+  return meta.includes(`도보 ${walkMinutes}분`);
+}
+
 export function RestaurantDetail() {
   const navigate = useNavigate();
   const { restaurantId } = useParams<{ restaurantId: string }>();
@@ -157,10 +169,27 @@ export function RestaurantDetail() {
                   </div>
                   <div className="mt-[5px] text-xs">
                     {restaurant.meta}
-                    {restaurant.distanceM != null &&
-                    restaurant.walkMinutes != null
-                      ? ` · ${restaurant.distanceM}m · 도보 ${restaurant.walkMinutes}분`
-                      : ""}
+                    {(() => {
+                      if (restaurant.distanceM == null) return null;
+                      const distanceText = formatDistance(restaurant.distanceM);
+                      const showDistance = !metaHasDistance(
+                        restaurant.meta,
+                        distanceText,
+                      );
+                      const showWalk =
+                        restaurant.walkMinutes != null &&
+                        !metaHasWalkTime(
+                          restaurant.meta,
+                          restaurant.walkMinutes,
+                        );
+                      const parts = [
+                        showDistance ? distanceText : null,
+                        showWalk ? `도보 ${restaurant.walkMinutes}분` : null,
+                      ].filter(Boolean);
+                      return parts.length > 0
+                        ? ` · ${parts.join(" · ")}`
+                        : null;
+                    })()}
                   </div>
                 </div>
               </div>
