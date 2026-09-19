@@ -51,10 +51,6 @@ function ProfileView({
         <div className="flex-1">
           <div className="text-[1.625rem] font-bold">{profile.name} 님</div>
           <div className="mt-[5px] text-xs">{profileMeta}</div>
-          {/* TODO: 프로필 수정(PUT /api/me/profile) 화면이 생기면 button + onClick으로 교체 */}
-          <span className="mt-[12px] inline-flex items-center gap-[6px] border-[1.5px] border-ink px-[12px] py-[6px] text-xs text-ink">
-            질환·주의 성분·알레르기 고치기 〉
-          </span>
         </div>
         <img src={AppLogo} alt="" className="h-[50px] w-auto flex-none" />
       </div>
