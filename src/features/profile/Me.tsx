@@ -158,7 +158,7 @@ function ProfileView({
                     <div className="mt-[6px] flex flex-wrap gap-[10px]">
                       {v.requests.map((r) => (
                         <span key={r} className="text-xs text-ink/70">
-                          그때 요청: {r}
+                          요청 사항: {r}
                         </span>
                       ))}
                     </div>
