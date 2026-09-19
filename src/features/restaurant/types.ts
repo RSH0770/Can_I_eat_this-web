@@ -50,4 +50,5 @@ export type RestaurantDetailResponse = {
   personalized: boolean; // false면 비로그인이라 판정을 못 한 것
   menus: MenuView[];
   disclaimer: string;
+  menusUnavailable: boolean;
 };
