@@ -233,101 +233,107 @@ export function RestaurantDetail() {
 
               {/* 메뉴 */}
               <SectionHeader title="메뉴" />
-              <div className="flex flex-col">
-                {menuRows.map((m) => (
-                  <div
-                    key={m.id}
-                    className={
-                      m.open
-                        ? "my-[4px] border-[1.5px] border-ink px-[12px]"
-                        : ""
-                    }
-                  >
-                    <button
-                      type="button"
-                      onClick={m.toggle}
-                      className="block w-full border-0 bg-transparent px-0 py-[13px] text-left text-ink"
+              {restaurant.menusUnavailable ? (
+                <p className="mt-[4px] text-[0.9375rem] text-ink/60">
+                  메뉴를 잠시 불러오지 못했어요.
+                </p>
+              ) : (
+                <div className="flex flex-col">
+                  {menuRows.map((m) => (
+                    <div
+                      key={m.id}
+                      className={
+                        m.open
+                          ? "my-[4px] border-[1.5px] border-ink px-[12px]"
+                          : ""
+                      }
                     >
-                      <span className="flex items-center gap-[12px]">
-                        <SealOrUnknown seal={m.seal} />
-                        <span className="flex-1">
-                          <span className="block text-[1.125rem] font-bold">
-                            {m.name}
-                          </span>
-                        </span>
-                        <span className="text-xs opacity-80">
-                          {m.open ? "접기" : "펼치기"}
-                        </span>
-                      </span>
-                      {m.open && (
-                        <span className="mt-[12px] block pl-[46px]">
-                          <span className="block text-[0.84375rem] leading-[1.7]">
-                            {m.detail}
-                          </span>
-                          {m.tags.length > 0 && (
-                            <span className="mt-[8px] flex flex-wrap gap-[10px]">
-                              {m.tags.map((t) => (
-                                <span key={t} className="text-xs">
-                                  · {t}
-                                </span>
-                              ))}
+                      <button
+                        type="button"
+                        onClick={m.toggle}
+                        className="block w-full border-0 bg-transparent px-0 py-[13px] text-left text-ink"
+                      >
+                        <span className="flex items-center gap-[12px]">
+                          <SealOrUnknown seal={m.seal} />
+                          <span className="flex-1">
+                            <span className="block text-[1.125rem] font-bold">
+                              {m.name}
                             </span>
-                          )}
+                          </span>
+                          <span className="text-xs opacity-80">
+                            {m.open ? "접기" : "펼치기"}
+                          </span>
                         </span>
-                      )}
-                    </button>
-
-                    {m.open && (
-                      <div className="px-[2px] pb-[14px] pt-[4px]">
-                        <div className="mb-[8px] text-xs tracking-[.08em] opacity-80">
-                          이 메뉴에 필요한 요청
-                        </div>
-                        {m.sug.length > 0 ? (
-                          <div className="flex flex-col">
-                            {m.sug.map((label) => {
-                              const on = requests.includes(label);
-                              return (
-                                <button
-                                  key={label}
-                                  type="button"
-                                  onClick={() => toggleRequest(label)}
-                                  className="flex w-full items-center gap-[12px] border-0 bg-transparent px-0 py-[9px] text-left text-ink"
-                                >
-                                  <span
-                                    className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[2px] border-[1.5px] text-[0.75rem] ${
-                                      on
-                                        ? "border-ink bg-ink text-cream"
-                                        : "border-ink/30 bg-transparent text-transparent"
-                                    }`}
-                                  >
-                                    ✓
+                        {m.open && (
+                          <span className="mt-[12px] block pl-[46px]">
+                            <span className="block text-[0.84375rem] leading-[1.7]">
+                              {m.detail}
+                            </span>
+                            {m.tags.length > 0 && (
+                              <span className="mt-[8px] flex flex-wrap gap-[10px]">
+                                {m.tags.map((t) => (
+                                  <span key={t} className="text-xs">
+                                    · {t}
                                   </span>
-                                  <span className="text-[0.96875rem]">
-                                    {label}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p className="m-0 text-[0.84375rem]">
-                            {m.seal
-                              ? "따로 부탁할 것이 없습니다."
-                              : "분석 전이라 요청을 제안할 수 없어요."}
-                          </p>
+                                ))}
+                              </span>
+                            )}
+                          </span>
                         )}
-                        <button
-                          type="button"
-                          onClick={m.openCard}
-                          className="mt-[10px] w-full border-0 bg-ink p-[12px] text-[0.96875rem] font-bold text-cream"
-                        >
-                          이 메뉴로 카드 만들기
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                      </button>
+
+                      {m.open && (
+                        <div className="px-[2px] pb-[14px] pt-[4px]">
+                          <div className="mb-[8px] text-xs tracking-[.08em] opacity-80">
+                            이 메뉴에 필요한 요청
+                          </div>
+                          {m.sug.length > 0 ? (
+                            <div className="flex flex-col">
+                              {m.sug.map((label) => {
+                                const on = requests.includes(label);
+                                return (
+                                  <button
+                                    key={label}
+                                    type="button"
+                                    onClick={() => toggleRequest(label)}
+                                    className="flex w-full items-center gap-[12px] border-0 bg-transparent px-0 py-[9px] text-left text-ink"
+                                  >
+                                    <span
+                                      className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[2px] border-[1.5px] text-[0.75rem] ${
+                                        on
+                                          ? "border-ink bg-ink text-cream"
+                                          : "border-ink/30 bg-transparent text-transparent"
+                                      }`}
+                                    >
+                                      ✓
+                                    </span>
+                                    <span className="text-[0.96875rem]">
+                                      {label}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <p className="m-0 text-[0.84375rem]">
+                              {m.seal
+                                ? "따로 부탁할 것이 없습니다."
+                                : "분석 전이라 요청을 제안할 수 없어요."}
+                            </p>
+                          )}
+                          <button
+                            type="button"
+                            onClick={m.openCard}
+                            className="mt-[10px] w-full border-0 bg-ink p-[12px] text-[0.96875rem] font-bold text-cream"
+                          >
+                            이 메뉴로 카드 만들기
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* 후기 */}
               <SectionHeader
