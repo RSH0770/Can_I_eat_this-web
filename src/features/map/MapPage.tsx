@@ -227,7 +227,7 @@ export function MapPage() {
                   })()}
                 </span>
                 <span className="flex-none text-xs">
-                  {item.seal?.label ?? "판정 대기"}
+                  {item.seal?.label ?? (item.summary || "판정 대기")}
                 </span>
               </span>
               {item.flags.length > 0 && (

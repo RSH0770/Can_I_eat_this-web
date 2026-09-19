@@ -15,6 +15,7 @@ type OrderCardNavState = {
   restaurantId?: number;
   requests?: string[];
   menuName: string;
+  menuId?: number;
   cardId?: number;
 };
 
@@ -49,6 +50,7 @@ export function OrderCard() {
           mode: "create",
           restaurantId: navState.restaurantId,
           requests: navState.requests ?? [],
+          menuId: navState.menuId,
         }}
         menuName={navState.menuName}
         onClose={onClose}

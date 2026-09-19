@@ -8,7 +8,12 @@ import { rememberPendingCard } from "../../../lib/orderCardLinks";
 
 export type OrderCardParams =
   | { mode: "existing"; cardId: number }
-  | { mode: "create"; restaurantId: number; requests: string[] };
+  | {
+      mode: "create";
+      restaurantId: number;
+      requests: string[];
+      menuId?: number;
+    };
 
 type OrderCardState =
   | { status: "loading" }
@@ -34,6 +39,7 @@ export function useOrderCard(params: OrderCardParams) {
               token,
               body: {
                 restaurantId: p.restaurantId,
+                ...(p.menuId != null ? { menuId: p.menuId } : {}),
                 // 카드 생성 자체엔 의미 없는 값이지만, 백엔드가 제보(POST /api/reports)와 완전히 같은 CreateRequest 스키마를 재사용해서 필수(required)로 요구함
                 // CardResponse 응답에 ok가 없는 걸 보면 카드 생성 로직은 이 값을 쓰지 않는 것으로 보임 — 검증만 통과시키기 위한 더미 값
                 ok: true,
@@ -58,10 +64,14 @@ export function useOrderCard(params: OrderCardParams) {
   }, [token]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- 최초 진입 1회만: paramsRef로 이후 변경은 의도적으로 무시
-  }, []);
+    let cancelled = false;
+    Promise.resolve().then(() => {
+      if (!cancelled) run();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [run]);
 
   const reload = useCallback(() => {
     run();
