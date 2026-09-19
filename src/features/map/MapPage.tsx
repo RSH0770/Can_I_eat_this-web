@@ -1,8 +1,3 @@
-// MapPage.tsx
-// GET /api/restaurants 연동 — 브라우저 위치(lat/lng) 기준으로 반경 검색해서 목록 + 지도에 뿌림
-// 검색창(query)은 서버 q 파라미터로 그대로 위임 — 식당명 기준으로 확인됨
-
-// TODO: 반경 설정 UI, 편의도 점수, 공공데이터 표시는 별도로 다시 설계해서 추가하기
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontSizeController } from "../../components/FontSizeController";
@@ -62,6 +57,10 @@ function formatDistance(m: number) {
 
 function metaHasWalkTime(meta: string, walkMinutes: number) {
   return meta.includes(`도보 ${walkMinutes}분`);
+}
+
+function metaHasDistance(meta: string, distanceText: string) {
+  return meta.includes(distanceText);
 }
 
 export function MapPage() {
@@ -194,11 +193,29 @@ export function MapPage() {
                     {item.name}
                   </span>
                   <span className="mt-[3px] block text-xs">{item.meta}</span>
-                  <span className="mt-[2px] block text-xs text-ink/60">
-                    {formatDistance(item.distanceM)}
-                    {!metaHasWalkTime(item.meta, item.walkMinutes) &&
-                      ` · 도보 ${item.walkMinutes}분`}
-                  </span>
+                  {(() => {
+                    const distanceText = formatDistance(item.distanceM);
+                    const showDistance = !metaHasDistance(
+                      item.meta,
+                      distanceText,
+                    );
+                    const showWalk = !metaHasWalkTime(
+                      item.meta,
+                      item.walkMinutes,
+                    );
+                    const parts = [
+                      showDistance ? distanceText : null,
+                      showWalk ? `도보 ${item.walkMinutes}분` : null,
+                    ].filter(Boolean);
+
+                    return (
+                      parts.length > 0 && (
+                        <span className="mt-[2px] block text-xs text-ink/60">
+                          {parts.join(" · ")}
+                        </span>
+                      )
+                    );
+                  })()}
                 </span>
                 <span className="flex-none text-xs">
                   {item.seal?.label ?? "판정 대기"}
