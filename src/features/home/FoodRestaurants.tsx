@@ -1,5 +1,3 @@
-//   TODO: 3-5 구현 시 공용 상태(context/store)로 옮길 것
-// - TODO: MOCK_ALLERGIES/MOCK_CARES는 실제 로그인 사용자 프로필로 교체해야함
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FontSizeController } from "../../components/FontSizeController";
@@ -7,33 +5,67 @@ import { Seal } from "../../components/Seal";
 import { SectionHeader } from "../../components/SectionHeader";
 import { useFontScale } from "../../context/FontScaleContext";
 import { SCREEN_ENTER } from "../../constants/animation";
-import { FOODS, RESTS } from "../../constants/mockFoodData";
-import { MOCK_ALLERGIES, MOCK_CARES } from "../../constants/mockUserProfile";
-import { CARE_NOTES, type Care } from "../../constants/diseaseCareMap";
-import { judge, judgeRest } from "../../utils/seal";
+import { useGeolocation } from "../../hooks/useGeolocation";
+import { useFoodDetail } from "./useFoodDetail";
+import type { SealKind } from "../../utils/seal";
+import type { ApiSeal } from "./foodTypes";
 
 const STROKE_GRADIENT =
   "linear-gradient(90deg, var(--color-ink) 0%, var(--color-ink) 62%, rgba(26,24,21,.35) 86%, rgba(26,24,21,0) 100%)";
+
+function SealOrUnknown({
+  seal,
+  size,
+}: {
+  seal: ApiSeal | null;
+  size?: number;
+}) {
+  if (seal)
+    return <Seal kind={seal.verdict.toLowerCase() as SealKind} size={size} />;
+  const s = size ?? 34;
+  return (
+    <span
+      aria-label="아직 판정되지 않았습니다"
+      title="아직 판정되지 않았습니다"
+      className="flex flex-none items-center justify-center rounded-[3px] border-[1.5px] border-ink/30 bg-transparent font-bold leading-none text-ink/40"
+      style={{ width: s, height: s, fontSize: Math.round(s * 0.52) }}
+    >
+      ?
+    </span>
+  );
+}
+
+function formatDistance(m: number | null) {
+  if (m == null) return "";
+  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+}
 
 export function FoodRestaurants() {
   const navigate = useNavigate();
   const { foodId } = useParams<{ foodId: string }>();
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
-  const [checkedTips, setCheckedTips] = useState<string[]>([]);
+  const [checkedTips, setCheckedTips] = useState<string[] | null>(null);
 
-  const food = FOODS.find((f) => f.id === foodId);
+  const geo = useGeolocation();
+  const detailState = useFoodDetail(
+    foodId,
+    geo.status === "ready" ? geo.coords : null,
+  );
 
   function goBackToList() {
     navigate("/home/foods");
   }
 
-  function toggleTip(tip: string) {
-    setCheckedTips((prev) =>
-      prev.includes(tip) ? prev.filter((t) => t !== tip) : [...prev, tip],
-    );
+  function toggleTip(tip: string, defaultSelected: string[]) {
+    setCheckedTips((prev) => {
+      const base = prev ?? defaultSelected;
+      return base.includes(tip)
+        ? base.filter((t) => t !== tip)
+        : [...base, tip];
+    });
   }
 
-  if (!food) {
+  if (!foodId) {
     return (
       <div
         className={`${SCREEN_ENTER} flex min-h-full flex-col px-[22px] pb-[10px] pt-[16px] text-ink`}
@@ -51,11 +83,6 @@ export function FoodRestaurants() {
       </div>
     );
   }
-
-  const allergenHits = food.allergens.filter((a) => MOCK_ALLERGIES.includes(a));
-  const kind = judge(food.allergens, food.cares, MOCK_ALLERGIES, MOCK_CARES);
-  const whys = food.cares.filter((c) => MOCK_CARES.includes(c));
-  const rests = RESTS.filter((r) => r.foods.includes(food.id));
 
   return (
     <div
@@ -77,101 +104,169 @@ export function FoodRestaurants() {
           canDecrease={canDecrease}
         />
       </div>
-      <h1 className="mt-[10px] text-[1.875rem] font-bold">지역 음식</h1>
+      <h1 className="mt-[10px] text-[1.875rem] font-bold">
+        {detailState.status === "ready"
+          ? detailState.result.regionLine
+          : "지역 음식"}
+      </h1>
       <div
         className="mt-[9px] h-[3px] rounded-[2px]"
         style={{ background: STROKE_GRADIENT }}
       />
 
-      <div className="mt-[16px] flex items-start gap-[14px]">
-        <Seal kind={kind} size={42} />
-        <div className="flex-1">
-          <div className="text-[1.625rem] font-bold leading-[1.2]">
-            {food.name}
-          </div>
-          <div className="mt-[4px] text-xs">{food.region} 지역 음식</div>
-        </div>
-      </div>
-      <p className="mt-[16px] text-[0.9375rem] leading-[1.72]">{food.desc}</p>
-
-      {allergenHits.length > 0 && (
-        <div className="mt-[20px] border-l-4 border-[#a6301f] bg-[#a6301f]/[0.09] px-[16px] py-[14px]">
-          <div className="text-[0.84375rem] font-bold text-[#7d2114]">
-            내 알레르기 재료가 들어갑니다
-          </div>
-          <div className="mt-[4px] text-[0.84375rem] text-[#7d2114]">
-            {allergenHits.join(" · ")} — 다른 메뉴를 고르거나 빼 달라고
-            요청하세요.
-          </div>
-        </div>
+      {detailState.status === "loading" && (
+        <p className="mt-[16px] text-[0.9375rem]">불러오는 중...</p>
       )}
 
-      {whys.length > 0 && (
-        <>
-          <SectionHeader title="무엇이 걸리는지" />
-          <div className="flex flex-col gap-[12px]">
-            {whys.map((c) => (
-              <div key={c} className="flex items-baseline gap-[12px]">
-                <span className="min-w-[84px] flex-none border-b-2 border-ink pb-[2px] text-[0.9375rem] font-bold">
-                  {c}
-                </span>
-                <span className="flex-1 text-[0.84375rem]">
-                  {CARE_NOTES[c as Care] ?? ""}
-                </span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      <SectionHeader title="이렇게 주문하면 됩니다" />
-      <div className="flex flex-col">
-        {food.tips.map((tip) => {
-          const on = checkedTips.includes(tip);
-          return (
-            <button
-              key={tip}
-              type="button"
-              onClick={() => toggleTip(tip)}
-              className="flex w-full items-center gap-[12px] border-0 bg-transparent px-0 py-[11px] text-left text-ink"
-            >
-              <span
-                className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[2px] border-[1.5px] text-[0.75rem] ${
-                  on
-                    ? "border-ink bg-ink text-cream"
-                    : "border-ink/30 bg-transparent text-transparent"
-                }`}
-              >
-                ✓
-              </span>
-              <span className="text-[0.96875rem]">{tip}</span>
-            </button>
-          );
-        })}
-      </div>
-      <p className="mt-[10px] text-xs">
-        고른 요청은 주문 요청 카드에 담깁니다.
-      </p>
-
-      <SectionHeader title="이 음식 파는 곳" />
-      <div className="flex flex-col pb-[10px]">
-        {rests.map((r) => (
+      {detailState.status === "error" && (
+        <div className="mt-[16px]">
+          <p className="text-[0.9375rem] text-[#a6301f]">
+            {detailState.message}
+          </p>
           <button
-            key={r.id}
             type="button"
-            onClick={() => navigate(`/restaurants/${r.id}`)}
-            className="flex w-full items-center gap-[12px] border-0 bg-transparent px-[2px] py-[13px] text-left transition-colors hover:bg-ink/[0.045]"
+            onClick={detailState.retry}
+            className="mt-[14px] border-[1.5px] border-ink bg-transparent px-[16px] py-[10px] text-[0.9375rem] font-bold text-ink transition-colors hover:bg-ink/[0.06]"
           >
-            <Seal kind={judgeRest(r.menus, MOCK_ALLERGIES, MOCK_CARES)} />
-            <span className="flex-1">
-              <span className="block text-[1.125rem] font-bold">{r.name}</span>
-              <span className="mt-[3px] block text-xs">
-                {r.area} · {r.dist}
-              </span>
-            </span>
+            다시 시도
           </button>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {detailState.status === "ready" &&
+        (() => {
+          const detail = detailState.result;
+          const defaultSelectedTips = detail.tips
+            .filter((t) => t.selected)
+            .map((t) => t.phrase);
+          const effectiveChecked = checkedTips ?? defaultSelectedTips;
+
+          return (
+            <>
+              <div className="mt-[16px] flex items-start gap-[14px]">
+                <SealOrUnknown seal={detail.seal} size={42} />
+                <div className="flex-1">
+                  <div className="text-[1.625rem] font-bold leading-[1.2]">
+                    {detail.name}
+                  </div>
+                  <div className="mt-[4px] text-xs">{detail.regionLine}</div>
+                </div>
+              </div>
+              <p className="mt-[16px] text-[0.9375rem] leading-[1.72]">
+                {detail.description}
+              </p>
+
+              {detail.hasAllergen && detail.allergenText && (
+                <div className="mt-[20px] border-l-4 border-[#a6301f] bg-[#a6301f]/[0.09] px-[16px] py-[14px]">
+                  <div className="text-[0.84375rem] font-bold text-[#7d2114]">
+                    내 알레르기 재료가 들어갑니다
+                  </div>
+                  <div className="mt-[4px] text-[0.84375rem] text-[#7d2114]">
+                    {detail.allergenText}
+                  </div>
+                </div>
+              )}
+
+              {detail.careReasons.length > 0 && (
+                <>
+                  <SectionHeader title="무엇이 걸리는지" />
+                  <div className="flex flex-col gap-[12px]">
+                    {detail.careReasons.map((c) => (
+                      <div
+                        key={c.name}
+                        className="flex items-baseline gap-[12px]"
+                      >
+                        <span className="min-w-[84px] flex-none border-b-2 border-ink pb-[2px] text-[0.9375rem] font-bold">
+                          {c.name}
+                        </span>
+                        <span className="flex-1 text-[0.84375rem]">
+                          {c.note}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {detail.tips.length > 0 && (
+                <>
+                  <SectionHeader title="이렇게 주문하면 됩니다" />
+                  <div className="flex flex-col">
+                    {detail.tips.map((tip) => {
+                      const on = effectiveChecked.includes(tip.phrase);
+                      return (
+                        <button
+                          key={tip.phrase}
+                          type="button"
+                          onClick={() =>
+                            toggleTip(tip.phrase, defaultSelectedTips)
+                          }
+                          className="flex w-full items-center gap-[12px] border-0 bg-transparent px-0 py-[11px] text-left text-ink"
+                        >
+                          <span
+                            className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[2px] border-[1.5px] text-[0.75rem] ${
+                              on
+                                ? "border-ink bg-ink text-cream"
+                                : "border-ink/30 bg-transparent text-transparent"
+                            }`}
+                          >
+                            ✓
+                          </span>
+                          <span className="text-[0.96875rem]">
+                            {tip.phrase}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-[10px] text-xs">
+                    고른 요청은 주문 요청 카드에 담깁니다.
+                  </p>
+                </>
+              )}
+
+              <SectionHeader title="이 음식 파는 곳" />
+              {detail.restaurantsUnavailable && (
+                <p className="text-[0.84375rem] text-ink/60">
+                  지금 식당 목록을 불러오지 못했어요. 잠시 후 다시 시도해
+                  주세요.
+                </p>
+              )}
+              {!detail.restaurantsUnavailable &&
+                detail.restaurants.length === 0 && (
+                  <p className="text-[0.84375rem] text-ink/60">
+                    근처에서 이 음식을 파는 곳을 찾지 못했어요.
+                  </p>
+                )}
+              <div className="flex flex-col pb-[10px]">
+                {detail.restaurants.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => navigate(`/restaurants/${r.id}`)}
+                    className="flex w-full items-center gap-[12px] border-0 bg-transparent px-[2px] py-[13px] text-left transition-colors hover:bg-ink/[0.045]"
+                  >
+                    <SealOrUnknown seal={r.seal} />
+                    <span className="flex-1">
+                      <span className="block text-[1.125rem] font-bold">
+                        {r.name}
+                      </span>
+                      <span className="mt-[3px] block text-xs">
+                        {r.meta}
+                        {r.distanceM != null
+                          ? ` · ${formatDistance(r.distanceM)}`
+                          : ""}
+                        {r.walkMinutes != null
+                          ? ` · 도보 ${r.walkMinutes}분`
+                          : ""}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          );
+        })()}
     </div>
   );
 }
