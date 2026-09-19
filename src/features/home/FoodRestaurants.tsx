@@ -5,7 +5,7 @@ import { Seal } from "../../components/Seal";
 import { SectionHeader } from "../../components/SectionHeader";
 import { useFontScale } from "../../context/FontScaleContext";
 import { SCREEN_ENTER } from "../../constants/animation";
-import { useGeolocation } from "../../hooks/useGeolocation";
+import { useAppLocation } from "../../context/LocationContext";
 import { useFoodDetail } from "./useFoodDetail";
 import type { SealKind } from "../../utils/seal";
 import type { ApiSeal } from "./foodTypes";
@@ -54,11 +54,9 @@ export function FoodRestaurants() {
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
   const [checkedTips, setCheckedTips] = useState<string[] | null>(null);
 
-  const geo = useGeolocation();
-  const detailState = useFoodDetail(
-    foodId,
-    geo.status === "ready" ? geo.coords : null,
-  );
+  const { location } = useAppLocation();
+  const detailState = useFoodDetail(foodId, location?.coords ?? null);
+  const isManual = location?.source === "manual";
 
   function goBackToList() {
     navigate("/home/foods");
@@ -261,16 +259,29 @@ export function FoodRestaurants() {
                       </span>
                       <span className="mt-[3px] block text-xs">
                         {r.meta}
-                        {r.distanceM != null &&
-                          !metaHasDistance(
+                        {(() => {
+                          if (r.distanceM == null) return null;
+                          const distanceText = formatDistance(r.distanceM);
+                          const showDistance = !metaHasDistance(
                             r.meta,
-                            formatDistance(r.distanceM),
-                          ) &&
-                          ` · ${formatDistance(r.distanceM)}`}
-                        {r.distanceM != null &&
-                          r.walkMinutes != null &&
-                          !metaHasWalkTime(r.meta, r.walkMinutes) &&
-                          ` · 도보 ${r.walkMinutes}분`}
+                            distanceText,
+                          );
+                          const showWalk =
+                            !isManual &&
+                            r.walkMinutes != null &&
+                            !metaHasWalkTime(r.meta, r.walkMinutes);
+                          const parts = [
+                            showDistance
+                              ? isManual
+                                ? `중심에서 ${distanceText}`
+                                : distanceText
+                              : null,
+                            showWalk ? `도보 ${r.walkMinutes}분` : null,
+                          ].filter(Boolean);
+                          return parts.length > 0
+                            ? ` · ${parts.join(" · ")}`
+                            : null;
+                        })()}
                       </span>
                     </span>
                   </button>

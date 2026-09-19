@@ -4,7 +4,7 @@ import { useFontScale } from "../../context/FontScaleContext";
 import { SCREEN_ENTER } from "../../constants/animation";
 import AppLogo from "../../assets/AppLogo.png";
 import { useProfile } from "../profile/useProfile";
-import { useGeolocation } from "../../hooks/useGeolocation";
+import { useAppLocation } from "../../context/LocationContext";
 import { useRegionalFoods } from "./useRegionalFoods";
 
 const REGION_FOOD_TITLE = "지역 음식";
@@ -13,13 +13,16 @@ export function Home() {
   const navigate = useNavigate();
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
   const state = useProfile();
-  const geo = useGeolocation();
-  const foodsState = useRegionalFoods(
-    geo.status === "ready" ? geo.coords : null,
-  );
+  const { location, openPicker } = useAppLocation();
+  const foodsState = useRegionalFoods(location?.coords ?? null);
 
   const regionLabel =
-    foodsState.status === "ready" ? foodsState.result.region : null;
+    location?.source === "manual"
+      ? location.label
+      : foodsState.status === "ready"
+        ? foodsState.result.region
+        : null;
+
   const foodPreviewText =
     foodsState.status === "ready" && foodsState.result.items.length > 0
       ? `${foodsState.result.items.length}가지 지역 음식이 있어요`
@@ -50,9 +53,14 @@ export function Home() {
       </div>
 
       {/* 타이틀 */}
-      <h1 className="text-[1.875rem] font-bold">
+      <button
+        type="button"
+        onClick={openPicker}
+        className="flex items-center gap-[6px] border-0 bg-transparent p-0 text-left text-[1.875rem] font-bold text-ink"
+      >
         {regionLabel ? `${regionLabel} · 여행 중` : "여행 중"}
-      </h1>
+        <span className="text-[1rem] text-ink/40">▾</span>
+      </button>
       <div
         className="mt-[9px] h-[3px] rounded-[2px]"
         style={{
