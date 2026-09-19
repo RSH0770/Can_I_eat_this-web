@@ -60,6 +60,10 @@ function formatDistance(m: number) {
   return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
 }
 
+function metaHasWalkTime(meta: string, walkMinutes: number) {
+  return meta.includes(`도보 ${walkMinutes}분`);
+}
+
 export function MapPage() {
   const navigate = useNavigate();
   const { increase, decrease, canIncrease, canDecrease, scale } =
@@ -191,7 +195,9 @@ export function MapPage() {
                   </span>
                   <span className="mt-[3px] block text-xs">{item.meta}</span>
                   <span className="mt-[2px] block text-xs text-ink/60">
-                    {formatDistance(item.distanceM)} · 도보 {item.walkMinutes}분
+                    {formatDistance(item.distanceM)}
+                    {!metaHasWalkTime(item.meta, item.walkMinutes) &&
+                      ` · 도보 ${item.walkMinutes}분`}
                   </span>
                 </span>
                 <span className="flex-none text-xs">

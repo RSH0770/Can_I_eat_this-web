@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FontSizeController } from "../../components/FontSizeController";
 import { Seal } from "../../components/Seal";
@@ -33,6 +33,15 @@ function SealOrUnknown({
       ?
     </span>
   );
+}
+
+function renderMultiline(text: string) {
+  return text.split(/<br\s*\/?>/gi).map((line, i, arr) => (
+    <Fragment key={i}>
+      {line}
+      {i < arr.length - 1 && <br />}
+    </Fragment>
+  ));
 }
 
 export function RestaurantDetail() {
@@ -188,7 +197,7 @@ export function RestaurantDetail() {
                         <dt className="w-[56px] shrink-0 text-ink/40">
                           영업시간
                         </dt>
-                        <dd>{restaurant.openTime}</dd>
+                        <dd>{renderMultiline(restaurant.openTime)}</dd>
                       </div>
                     )}
                     {restaurant.restDate && (
@@ -196,7 +205,7 @@ export function RestaurantDetail() {
                         <dt className="w-[56px] shrink-0 text-ink/40">
                           휴무일
                         </dt>
-                        <dd>{restaurant.restDate}</dd>
+                        <dd>{renderMultiline(restaurant.restDate)}</dd>
                       </div>
                     )}
                     {restaurant.tel && (
@@ -302,7 +311,9 @@ export function RestaurantDetail() {
                           </div>
                         ) : (
                           <p className="m-0 text-[0.84375rem]">
-                            따로 부탁할 것이 없습니다.
+                            {m.seal
+                              ? "따로 부탁할 것이 없습니다."
+                              : "분석 전이라 요청을 제안할 수 없어요."}
                           </p>
                         )}
                         <button

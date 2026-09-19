@@ -40,6 +40,14 @@ function formatDistance(m: number | null) {
   return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
 }
 
+function metaHasDistance(meta: string, distanceText: string) {
+  return meta.includes(distanceText);
+}
+
+function metaHasWalkTime(meta: string, walkMinutes: number) {
+  return meta.includes(`도보 ${walkMinutes}분`);
+}
+
 export function FoodRestaurants() {
   const navigate = useNavigate();
   const { foodId } = useParams<{ foodId: string }>();
@@ -253,12 +261,16 @@ export function FoodRestaurants() {
                       </span>
                       <span className="mt-[3px] block text-xs">
                         {r.meta}
-                        {r.distanceM != null
-                          ? ` · ${formatDistance(r.distanceM)}`
-                          : ""}
-                        {r.walkMinutes != null
-                          ? ` · 도보 ${r.walkMinutes}분`
-                          : ""}
+                        {r.distanceM != null &&
+                          !metaHasDistance(
+                            r.meta,
+                            formatDistance(r.distanceM),
+                          ) &&
+                          ` · ${formatDistance(r.distanceM)}`}
+                        {r.distanceM != null &&
+                          r.walkMinutes != null &&
+                          !metaHasWalkTime(r.meta, r.walkMinutes) &&
+                          ` · 도보 ${r.walkMinutes}분`}
                       </span>
                     </span>
                   </button>
