@@ -173,6 +173,55 @@ export function RestaurantDetail() {
                   : "아직 판정 정보가 없습니다."}
               </p>
 
+              {/* 매장 정보 섹션 (전화 · 영업시간 · 휴무일 · 주차) */}
+              {(restaurant.tel ||
+                restaurant.openTime ||
+                restaurant.restDate ||
+                restaurant.parking) && (
+                <section className="mt-[16px] rounded-[2px] border border-ink/30 bg-ink/[0.02] p-[16px]">
+                  <h2 className="mb-[10px] text-[0.9375rem] font-semibold">
+                    매장 정보
+                  </h2>
+                  <dl className="space-y-[6px] text-[0.875rem] text-ink/70">
+                    {restaurant.openTime && (
+                      <div className="flex gap-[8px]">
+                        <dt className="w-[56px] shrink-0 text-ink/40">
+                          영업시간
+                        </dt>
+                        <dd>{restaurant.openTime}</dd>
+                      </div>
+                    )}
+                    {restaurant.restDate && (
+                      <div className="flex gap-[8px]">
+                        <dt className="w-[56px] shrink-0 text-ink/40">
+                          휴무일
+                        </dt>
+                        <dd>{restaurant.restDate}</dd>
+                      </div>
+                    )}
+                    {restaurant.tel && (
+                      <div className="flex gap-[8px]">
+                        <dt className="w-[56px] shrink-0 text-ink/40">전화</dt>
+                        <dd>
+                          <a
+                            href={`tel:${restaurant.tel}`}
+                            className="underline"
+                          >
+                            {restaurant.tel}
+                          </a>
+                        </dd>
+                      </div>
+                    )}
+                    {restaurant.parking && (
+                      <div className="flex gap-[8px]">
+                        <dt className="w-[56px] shrink-0 text-ink/40">주차</dt>
+                        <dd>{restaurant.parking}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </section>
+              )}
+
               {/* 메뉴 */}
               <SectionHeader title="메뉴" />
               <div className="flex flex-col">
