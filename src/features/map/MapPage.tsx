@@ -9,6 +9,7 @@ import type { SealKind } from "../../utils/seal";
 import type { ApiSeal } from "../restaurant/types";
 import { KakaoRestaurantMap, type MapMarkerData } from "./KakaoRestaurantMap";
 import { useRestaurantSearch } from "./useRestaurantSearch";
+import { useAppLocation } from "../../context/LocationContext";
 import { createPortal } from "react-dom";
 
 const STROKE_GRADIENT =
@@ -74,6 +75,11 @@ export function MapPage() {
   const [mapFull, setMapFull] = useState(false);
   const [resetToken, setResetToken] = useState(0);
 
+  const { location, openPicker } = useAppLocation();
+  const coords = location?.coords ?? null;
+  const radius = location?.radius ?? 2000;
+  const isManual = location?.source === "manual";
+
   // 타이핑마다 서버에 요청을 보내지 않도록 짧게 디바운스한 뒤에만 실제 검색어(query)를 갱신
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -83,7 +89,13 @@ export function MapPage() {
     return () => clearTimeout(timer);
   }, [queryInput]);
 
-  const searchState = useRestaurantSearch(query, page, PAGE_SIZE);
+  const searchState = useRestaurantSearch(
+    query,
+    page,
+    PAGE_SIZE,
+    coords,
+    radius,
+  );
 
   function openRestaurant(id: number | string) {
     navigate(`/restaurants/${id}`);
@@ -102,7 +114,7 @@ export function MapPage() {
     lng: item.lng,
     kind: item.seal ? (item.seal.verdict.toLowerCase() as SealKind) : "unknown",
   }));
-  const mapCenter = searchState.coords ?? computeCenter(markerData);
+  const mapCenter = coords ?? computeCenter(markerData);
 
   return (
     <div
@@ -137,24 +149,17 @@ export function MapPage() {
         )}
       </div>
 
-      {/* 위치/조회 상태 */}
-      {searchState.status === "locating" && (
-        <p className="mt-[16px] text-[0.9375rem]">현재 위치를 확인하는 중...</p>
-      )}
+      <button
+        type="button"
+        onClick={openPicker}
+        className="mt-[8px] self-start border-0 bg-transparent p-0 text-xs text-ink/60"
+      >
+        {isManual ? `${location.label} 기준` : "내 위치 기준"} · 지역 변경
+      </button>
 
-      {searchState.status === "location-error" && (
-        <div className="mt-[16px]">
-          <p className="text-[0.9375rem] text-[#a6301f]">
-            {searchState.message}
-          </p>
-          <button
-            type="button"
-            onClick={searchState.retryLocation}
-            className="mt-[14px] border-[1.5px] border-ink bg-transparent px-[16px] py-[10px] text-[0.9375rem] font-bold text-ink transition-colors hover:bg-ink/[0.06]"
-          >
-            다시 시도
-          </button>
-        </div>
+      {/* 위치/조회 상태 */}
+      {searchState.status === "idle" && (
+        <p className="mt-[16px] text-[0.9375rem]">현재 위치를 확인하는 중...</p>
       )}
 
       {searchState.status === "loading" && (
@@ -194,17 +199,21 @@ export function MapPage() {
                   </span>
                   <span className="mt-[3px] block text-xs">{item.meta}</span>
                   {(() => {
+                    if (item.distanceM == null) return null;
                     const distanceText = formatDistance(item.distanceM);
                     const showDistance = !metaHasDistance(
                       item.meta,
                       distanceText,
                     );
-                    const showWalk = !metaHasWalkTime(
-                      item.meta,
-                      item.walkMinutes,
-                    );
+                    const showWalk =
+                      !isManual &&
+                      !metaHasWalkTime(item.meta, item.walkMinutes);
                     const parts = [
-                      showDistance ? distanceText : null,
+                      showDistance
+                        ? isManual
+                          ? `중심에서 ${distanceText}`
+                          : distanceText
+                        : null,
                       showWalk ? `도보 ${item.walkMinutes}분` : null,
                     ].filter(Boolean);
 
@@ -270,7 +279,7 @@ export function MapPage() {
         <KakaoRestaurantMap
           markers={markerData}
           center={mapCenter}
-          myLocation={searchState.coords}
+          myLocation={coords}
           height={232 * scale}
           level={8}
           onMarkerClick={openRestaurant}
@@ -287,7 +296,7 @@ export function MapPage() {
             <KakaoRestaurantMap
               markers={markerData}
               center={mapCenter}
-              myLocation={searchState.coords}
+              myLocation={coords}
               height="100%"
               level={7}
               big

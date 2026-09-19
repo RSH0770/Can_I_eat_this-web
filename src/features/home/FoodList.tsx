@@ -3,7 +3,7 @@ import { FontSizeController } from "../../components/FontSizeController";
 import { Seal } from "../../components/Seal";
 import { useFontScale } from "../../context/FontScaleContext";
 import { SCREEN_ENTER } from "../../constants/animation";
-import { useGeolocation } from "../../hooks/useGeolocation";
+import { useAppLocation } from "../../context/LocationContext";
 import { useRegionalFoods } from "./useRegionalFoods";
 import type { SealKind } from "../../utils/seal";
 import type { ApiSeal } from "./foodTypes";
@@ -37,15 +37,15 @@ function SealOrUnknown({
 export function FoodList() {
   const navigate = useNavigate();
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
-  const geo = useGeolocation();
-  const foodsState = useRegionalFoods(
-    geo.status === "ready" ? geo.coords : null,
-  );
+  const { location, openPicker } = useAppLocation();
+  const foodsState = useRegionalFoods(location?.coords ?? null);
 
   const regionTitle =
-    foodsState.status === "ready" && foodsState.result.region
-      ? `${foodsState.result.region} 지역 음식`
-      : "지역 음식";
+    location?.source === "manual"
+      ? `${location.label} 지역 음식`
+      : foodsState.status === "ready" && foodsState.result.region
+        ? `${foodsState.result.region} 지역 음식`
+        : "지역 음식";
 
   return (
     <div
@@ -68,6 +68,13 @@ export function FoodList() {
         />
       </div>
       <h1 className="mt-[10px] text-[1.875rem] font-bold">{regionTitle}</h1>
+      <button
+        type="button"
+        onClick={openPicker}
+        className="mt-[4px] self-start border-0 bg-transparent p-0 text-xs text-ink/50"
+      >
+        지역 변경
+      </button>
       <div
         className="mt-[9px] h-[3px] rounded-[2px]"
         style={{ background: STROKE_GRADIENT }}
@@ -77,28 +84,15 @@ export function FoodList() {
         눌러 보면 무엇이 걸리는지, 어떻게 주문하면 되는지 나옵니다.
       </p>
 
-      {geo.status === "locating" && (
+      {!location && (
         <p className="mt-[16px] text-[0.9375rem]">현재 위치를 확인하는 중...</p>
       )}
 
-      {geo.status === "error" && (
-        <div className="mt-[16px]">
-          <p className="text-[0.9375rem] text-[#a6301f]">{geo.message}</p>
-          <button
-            type="button"
-            onClick={geo.retry}
-            className="mt-[14px] border-[1.5px] border-ink bg-transparent px-[16px] py-[10px] text-[0.9375rem] font-bold text-ink transition-colors hover:bg-ink/[0.06]"
-          >
-            다시 시도
-          </button>
-        </div>
-      )}
-
-      {geo.status === "ready" && foodsState.status === "loading" && (
+      {location && foodsState.status === "loading" && (
         <p className="mt-[16px] text-[0.9375rem]">지역 음식을 불러오는 중...</p>
       )}
 
-      {geo.status === "ready" && foodsState.status === "error" && (
+      {location && foodsState.status === "error" && (
         <div className="mt-[16px]">
           <p className="text-[0.9375rem] text-[#a6301f]">
             {foodsState.message}
@@ -113,7 +107,7 @@ export function FoodList() {
         </div>
       )}
 
-      {geo.status === "ready" &&
+      {location &&
         foodsState.status === "ready" &&
         (foodsState.result.items.length === 0 ? (
           <p className="mt-[16px] text-[0.84375rem] leading-[1.7]">
