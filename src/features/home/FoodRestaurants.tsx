@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FontSizeController } from "../../components/FontSizeController";
 import { Seal } from "../../components/Seal";
@@ -52,7 +51,6 @@ export function FoodRestaurants() {
   const navigate = useNavigate();
   const { foodId } = useParams<{ foodId: string }>();
   const { increase, decrease, canIncrease, canDecrease } = useFontScale();
-  const [checkedTips, setCheckedTips] = useState<string[] | null>(null);
 
   const { location } = useAppLocation();
   const detailState = useFoodDetail(foodId, location?.coords ?? null);
@@ -60,15 +58,6 @@ export function FoodRestaurants() {
 
   function goBackToList() {
     navigate("/home/foods");
-  }
-
-  function toggleTip(tip: string, defaultSelected: string[]) {
-    setCheckedTips((prev) => {
-      const base = prev ?? defaultSelected;
-      return base.includes(tip)
-        ? base.filter((t) => t !== tip)
-        : [...base, tip];
-    });
   }
 
   if (!foodId) {
@@ -142,10 +131,6 @@ export function FoodRestaurants() {
       {detailState.status === "ready" &&
         (() => {
           const detail = detailState.result;
-          const defaultSelectedTips = detail.tips
-            .filter((t) => t.selected)
-            .map((t) => t.phrase);
-          const effectiveChecked = checkedTips ?? defaultSelectedTips;
 
           return (
             <>
@@ -198,35 +183,26 @@ export function FoodRestaurants() {
                 <>
                   <SectionHeader title="이렇게 주문하면 됩니다" />
                   <div className="flex flex-col">
-                    {detail.tips.map((tip) => {
-                      const on = effectiveChecked.includes(tip.phrase);
-                      return (
-                        <button
-                          key={tip.phrase}
-                          type="button"
-                          onClick={() =>
-                            toggleTip(tip.phrase, defaultSelectedTips)
-                          }
-                          className="flex w-full items-center gap-[12px] border-0 bg-transparent px-0 py-[11px] text-left text-ink"
+                    {detail.tips.map((tip) => (
+                      <div
+                        key={tip.phrase}
+                        className="flex w-full items-center gap-[12px] px-0 py-[11px] text-ink"
+                      >
+                        <span
+                          className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[2px] border-[1.5px] text-[0.75rem] ${
+                            tip.selected
+                              ? "border-ink bg-ink text-cream"
+                              : "border-ink/30 bg-transparent text-transparent"
+                          }`}
                         >
-                          <span
-                            className={`flex h-[22px] w-[22px] flex-none items-center justify-center rounded-[2px] border-[1.5px] text-[0.75rem] ${
-                              on
-                                ? "border-ink bg-ink text-cream"
-                                : "border-ink/30 bg-transparent text-transparent"
-                            }`}
-                          >
-                            ✓
-                          </span>
-                          <span className="text-[0.96875rem]">
-                            {tip.phrase}
-                          </span>
-                        </button>
-                      );
-                    })}
+                          ✓
+                        </span>
+                        <span className="text-[0.96875rem]">{tip.phrase}</span>
+                      </div>
+                    ))}
                   </div>
-                  <p className="mt-[10px] text-xs">
-                    고른 요청은 주문 요청 카드에 담깁니다.
+                  <p className="mt-[10px] text-xs text-ink/60">
+                    주문할 때 이렇게 말해보세요.
                   </p>
                 </>
               )}
