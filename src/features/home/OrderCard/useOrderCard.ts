@@ -25,6 +25,10 @@ export function useOrderCard(params: OrderCardParams) {
   const [state, setState] = useState<OrderCardState>({ status: "loading" });
   const paramsRef = useRef(params);
 
+  useEffect(() => {
+    paramsRef.current = params;
+  });
+
   const run = useCallback(async () => {
     setState({ status: "loading" });
     const p = paramsRef.current;
@@ -63,15 +67,20 @@ export function useOrderCard(params: OrderCardParams) {
     }
   }, [token]);
 
+  const runRef = useRef(run);
+  useEffect(() => {
+    runRef.current = run;
+  });
+
   useEffect(() => {
     let cancelled = false;
     Promise.resolve().then(() => {
-      if (!cancelled) run();
+      if (!cancelled) runRef.current();
     });
     return () => {
       cancelled = true;
     };
-  }, [run]);
+  }, []);
 
   const reload = useCallback(() => {
     run();
